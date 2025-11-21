@@ -1,28 +1,67 @@
 /**
  * Resources API (Client-side)
  * 
- * Client-side functions for interacting with resources via API routes.
- * These functions call the Next.js API routes which interact with Google Sheets.
- * 
- * This file is kept for backward compatibility. The actual implementation
- * is now in @/lib/google-sheets/resources.ts (server-side) and these
- * functions call the API routes.
+ * Client-side functions for interacting with resources via Python Flask API.
+ * All API calls go to the Python backend server.
  */
 
-// Re-export types from google-sheets/resources
-export type {
-  ResourceCategory,
-  ResourceTag,
-  Resource,
-  ResourceFilters,
-} from '@/lib/google-sheets/resources';
+// API base URL - defaults to localhost:5000, can be overridden with env var
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+// Type definitions
+export type ResourceCategory = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon?: string | null;
+};
+
+export type ResourceTag = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+export type Resource = {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  category_id: number;
+  category?: ResourceCategory;
+  category_name?: string;
+  address: string | null;
+  city: string;
+  state: string;
+  zip_code: string;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  hours_of_operation: string | null;
+  eligibility_criteria: string | null;
+  status: string;
+  requires_verification: boolean;
+  tags?: ResourceTag[] | string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ResourceFilters = {
+  category?: string;
+  city?: string;
+  state?: string;
+  tags?: string[];
+  query?: string;
+  status?: string;
+};
 
 /**
  * Get all resource categories
  */
-export async function getResourceCategories() {
+export async function getResourceCategories(): Promise<ResourceCategory[]> {
   try {
-    const response = await fetch('/api/categories');
+    const response = await fetch(`${API_BASE_URL}/api/categories`);
     if (!response.ok) {
       throw new Error('Failed to fetch categories');
     }
@@ -37,7 +76,7 @@ export async function getResourceCategories() {
 /**
  * Get all resource tags
  */
-export async function getResourceTags() {
+export async function getResourceTags(): Promise<ResourceTag[]> {
   // Tags can be derived from resources or stored separately
   // For now, return empty array
   return [];
@@ -46,7 +85,7 @@ export async function getResourceTags() {
 /**
  * Get resources with optional filters
  */
-export async function getResources(filters?: any) {
+export async function getResources(filters?: ResourceFilters): Promise<Resource[]> {
   try {
     const params = new URLSearchParams();
     if (filters?.category) params.append('category', filters.category);
@@ -55,7 +94,7 @@ export async function getResources(filters?: any) {
     if (filters?.status) params.append('status', filters.status);
     if (filters?.query) params.append('query', filters.query);
     
-    const url = `/api/resources${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `${API_BASE_URL}/api/resources${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -73,9 +112,9 @@ export async function getResources(filters?: any) {
 /**
  * Get a resource by slug
  */
-export async function getResourceBySlug(slug: string) {
+export async function getResourceBySlug(slug: string): Promise<Resource | null> {
   try {
-    const response = await fetch(`/api/resources/${slug}`);
+    const response = await fetch(`${API_BASE_URL}/api/resources/${slug}`);
     if (!response.ok) {
       if (response.status === 404) {
         return null;
@@ -95,7 +134,7 @@ export async function getResourceBySlug(slug: string) {
  */
 export async function submitResourceUpdate(resourceId: number, updates: any) {
   try {
-    const response = await fetch(`/api/resources/${resourceId}`, {
+    const response = await fetch(`${API_BASE_URL}/api/resources/${resourceId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -125,9 +164,9 @@ export async function updateResource(resourceId: number, updates: any) {
 /**
  * Create a new resource
  */
-export async function createResource(resource: any) {
+export async function createResource(resource: Omit<Resource, 'id' | 'created_at' | 'updated_at'>) {
   try {
-    const response = await fetch('/api/resources', {
+    const response = await fetch(`${API_BASE_URL}/api/resources`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

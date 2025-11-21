@@ -2,16 +2,16 @@
  * Resource List Component
  * 
  * This component displays a list of resources with filtering capabilities.
- * It fetches data from Supabase and renders resource cards.
+ * It fetches data from Google Sheets via API routes and renders resource cards.
  * 
  * Expected features:
- * 1. Fetch resources from Supabase
+ * 1. Fetch resources from API
  * 2. Apply filters based on props
  * 3. Display resources in a responsive grid
  * 4. Handle loading, error, and empty states
  * 
  * Implementation notes:
- * - Use the Supabase resources API functions
+ * - Use the resources API functions from @/lib/api/resources
  * - Implement useEffect to fetch data when filters change
  * - Use the Card component to display each resource
  * - Include pagination if needed
@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 // Uncomment when implementing resource fetching
-// import { getResources, type Resource, type ResourceFilters } from "@/lib/supabase/resources";
+// import { getResources, type Resource, type ResourceFilters } from "@/lib/api/resources";
 
 interface ResourceListProps {
   filters?: any; // Replace with ResourceFilters type

@@ -10,13 +10,13 @@ A web application for the Community Change Team that helps people with resource 
 - [shadcn/ui](https://ui.shadcn.com/) - Beautifully designed components built with Radix UI and Tailwind CSS
 
 ### Backend
-- [Supabase](https://supabase.com/) - Open source Firebase alternative for database, authentication, and storage
+- [Google Sheets API](https://developers.google.com/sheets/api) - Google Spreadsheets for resource data management
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v18 or later)
-- Python (v3.8 or later) - For backend scripts (optional)
+- Python (v3.8 or later) - Required for backend API
+- Node.js (v18 or later) - Required for frontend (Next.js)
 
 ### Installation
 
@@ -26,30 +26,45 @@ git clone https://github.com/your-username/Recovery-Services-App.git
 cd Recovery-Services-App
 ```
 
-2. Set up the frontend
+2. Set up the backend
 ```bash
-cd frontend
-npm install
+cd backend
+pip install -r requirements.txt
 ```
 
 3. Set up environment variables
-- Create `.env.local` in the frontend directory with your Supabase credentials:
+
+**Backend (`.env` in backend directory):**
 ```
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+GOOGLE_SERVICE_ACCOUNT_PATH=./google_sheets/credentials.json
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id-here
 ```
 
-4. Set up Supabase
-- Follow the instructions in `backend/supabase/README.md` to set up your Supabase project
-- Run the SQL scripts in the Supabase SQL Editor
+**Frontend (`.env.local` in frontend directory):**
+```
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+4. Set up Google Sheets
+- Follow the instructions in `backend/google_sheets/README.md` to set up your Google Sheets integration
+- Create a Google Spreadsheet with the required structure
 
 ## Development
+
+### Running the backend
+```bash
+cd backend
+python app.py
+```
+The API will be available at `http://localhost:5000`
 
 ### Running the frontend
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
+The frontend will be available at `http://localhost:3000`
 
 ## Target Users
 
@@ -79,8 +94,8 @@ The application includes a streamlined process for resource providers to update 
 6. Update and submit changes
 
 ### Administration
-- User authentication and authorization through Supabase
-- Row-Level Security policies for data protection
+- Resource data stored in Google Spreadsheets
+- API routes for resource management
 
 ## Contributing
 

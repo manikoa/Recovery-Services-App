@@ -2,7 +2,7 @@
  * Authentication Form Component
  * 
  * This component handles user authentication (sign in and sign up).
- * It provides a form for users to enter their credentials and submit them to Supabase Auth.
+ * It provides a form for users to enter their credentials and submit them.
  * 
  * Expected features:
  * 1. Toggle between sign in and sign up modes
@@ -14,7 +14,7 @@
  * Implementation notes:
  * - Use the useAuth hook for authentication functions
  * - Implement form validation for email and password
- * - Show appropriate error messages from Supabase
+ * - Show appropriate error messages
  * - Handle success callback for post-authentication actions
  */
 

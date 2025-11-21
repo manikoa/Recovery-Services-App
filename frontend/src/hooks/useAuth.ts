@@ -1,7 +1,7 @@
 /**
  * Authentication Hook
  * 
- * A custom React hook for handling authentication with Supabase.
+ * A custom React hook for handling authentication.
  * Provides user state, session management, and authentication methods.
  * 
  * Features:
@@ -25,14 +25,23 @@
  * ```
  * 
  * Implementation notes:
- * - Uses Supabase Auth API for authentication
+ * - Authentication can be implemented with any auth provider
  * - Uses React's useState and useEffect for state management
- * - Subscribes to auth state changes with onAuthStateChange
+ * - Currently a placeholder - implement your authentication solution here
  */
 
 import { useState, useEffect } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase/client';
+
+export type User = {
+  id: string;
+  email: string;
+  [key: string]: any;
+};
+
+export type Session = {
+  user: User;
+  [key: string]: any;
+};
 
 export function useAuth() {
   // Add state variables for user, session, and loading
@@ -51,8 +60,9 @@ export function useAuth() {
     const getSession = async () => {
       setLoading(true);
       try {
-        // Get session from Supabase
+        // Get session from your auth provider
         console.log("Getting session...");
+        // TODO: Implement authentication
       } catch (error) {
         console.error("Error getting session:", error);
       } finally {
@@ -73,6 +83,7 @@ export function useAuth() {
     try {
       // Add your sign in implementation here
       console.log("Signing in...", email);
+      // TODO: Implement sign in
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -84,6 +95,7 @@ export function useAuth() {
     try {
       // Add your sign up implementation here
       console.log("Signing up...", email);
+      // TODO: Implement sign up
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -95,6 +107,7 @@ export function useAuth() {
     try {
       // Add your sign out implementation here
       console.log("Signing out...");
+      // TODO: Implement sign out
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error.message };

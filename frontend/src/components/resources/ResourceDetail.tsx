@@ -2,7 +2,7 @@
  * Resource Detail Component
  * 
  * This component displays detailed information about a specific resource.
- * It fetches the resource data from Supabase based on the slug.
+ * It fetches the resource data from Google Sheets via API routes based on the slug.
  * 
  * Expected features:
  * 1. Display comprehensive resource information
@@ -11,7 +11,7 @@
  * 4. Display resource tags and categories
  * 
  * Implementation notes:
- * - Use the Supabase resources API to fetch resource details
+ * - Use the resources API from @/lib/api/resources to fetch resource details
  * - Implement conditional rendering for update form based on authentication
  * - Structure the layout with a main content area and sidebar
  * - Use Card components to organize different sections
@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 // Uncomment when implementing authentication and resource fetching
 // import { useAuth } from "@/hooks/useAuth";
-// import { type Resource } from "@/lib/supabase/resources";
+// import { type Resource } from "@/lib/api/resources";
 
 interface ResourceDetailProps {
   resource?: any; // Replace with Resource type
