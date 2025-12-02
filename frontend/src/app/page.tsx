@@ -1,284 +1,250 @@
-import ResourceList from '@/components/resources/ResourceList';
+'use client';
 
-// Data from CSV import - updated with more complete contact information
-const resources = [
-  {
-    id: 1,
-    name: "Hope Street",
-    category: "Recovery Support",
-    description: "Provides housing assistance, resource referral, peer support, mentoring, recovery programming, and community building activities for women, formerly incarcerated, LGBTQIA+, and indigenous populations with history of SUD.",
-    phone: "(509) 540-5276",
-    email: "general@hopestreethomes.org",
-    address: "",
-    website: "https://www.hopestreethomes.org",
-    hours: "",
-    services: ["Housing Assistance", "Resource Referral", "Peer Support", "Mentoring", "Recovery Programming"],
-    requirements: "History of SUD and requires a negative UA to enter the house",
-    populations: ["Women", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person"]
-  },
-  {
-    id: 2,
-    name: "Walla Walla Alliance for the Homeless",
-    category: "Prevention & Recovery Support",
-    description: "Nonprofit serving diverse populations with life skills training, resiliency approaches, education, community building, and resource referrals.",
-    phone: "(509) 520-0316",
-    email: "sleepingcenter@w2ah.org",
-    address: "1181 W Rees Ave, Walla Walla, WA 99362",
-    website: "https://www.wwallianceforthehomeless.com",
-    hours: "",
-    services: ["Life Skills Training", "Community Building", "Resource Referral", "Mental Health Support", "Medical Support"],
-    requirements: "Residents 18+",
-    populations: ["Women", "Men", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person"]
-  },
-  {
-    id: 3,
-    name: "The Health Center",
-    category: "Comprehensive Services",
-    description: "Youth-focused services including prevention, intervention, treatment, and recovery support for students at specific Walla Walla schools.",
-    phone: "(509) 525-0704",
-    email: "help@thehealthcenterww.org",
-    address: "534 S 3rd Ave B-101, Walla Walla, WA 99362",
-    website: "https://www.thehealthcenterww.org",
-    hours: "",
-    services: ["School-Based Services", "Mental Health Support", "Medical Support", "Telehealth", "Counseling"],
-    requirements: "Students must attend specific Walla Walla schools",
-    populations: ["Youth (Ages 10-18)"],
-    spanishServices: true,
-    deliveryMethods: ["In person", "Virtual/telehealth", "Handicap accessible"]
-  },
-  {
-    id: 4,
-    name: "Christian Aid Center",
-    category: "Comprehensive Services",
-    description: "Provides extensive services including prevention, intervention, and recovery support for diverse populations with housing programs and counseling.",
-    phone: "(509) 525-7153",
-    email: "",
-    address: "202 W Birch St, Walla Walla, WA 99362",
-    website: "https://www.christianaidcenter.org",
-    hours: "",
-    services: ["Housing", "Counseling", "SUD Assessments", "Detox", "Peer Support", "Transportation"],
-    requirements: "Abstinence following entry",
-    populations: ["Women", "Men", "Children", "Youth", "Families", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: "Spanish-speaking staff available",
-    deliveryMethods: ["In person", "Handicap accessible"]
-  },
-  {
-    id: 5,
-    name: "Oxford House",
-    category: "Recovery Support",
-    description: "Peer-supported recovery housing for diverse populations with Spanish language materials available.",
-    phone: "(301) 587-2916",
-    email: "",
-    address: "",
-    website: "https://www.oxfordhouse.org",
-    hours: "",
-    services: ["Peer Support", "Recovery Housing"],
-    requirements: "Being accepted into the house",
-    populations: ["Women", "Men", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations", "Women and children 0-10"],
-    spanishServices: "Applications and manual in Spanish",
-    deliveryMethods: ["In home"]
-  },
-  {
-    id: 6,
-    name: "Trilogy Recovery Community",
-    category: "Prevention & Recovery Support",
-    description: "Community-based recovery support with life skills training, counseling, harm reduction, and various support services.",
-    phone: "",
-    email: "kate@trilogyrecovery.org",
-    address: "",
-    website: "",
-    hours: "",
-    services: ["Counseling", "Harm Reduction", "Peer Support", "Career Services", "Support Groups"],
-    requirements: "Desire to live substance-free",
-    populations: ["Women", "Men", "Children", "Youth", "Families", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: true,
-    deliveryMethods: ["In person", "Virtual/telehealth", "Handicap accessible"]
-  },
-  {
-    id: 7,
-    name: "Blue Mountain Heart to Heart",
-    category: "Comprehensive Services",
-    description: "Services for populations living with HIV/AIDS and OUD including harm reduction, medical support, and peer support.",
-    phone: "(509) 529-4744",
-    email: "",
-    address: "5 W Alder St, Suite 333, Walla Walla, WA 99362",
-    website: "https://bluemountainheart2heart.wordpress.com",
-    hours: "",
-    services: ["Harm Reduction", "Medical Support", "Peer Support", "Food Support", "Syringe Service Program"],
-    requirements: "Depends on program (HIV/AIDS, OUD diagnoses)",
-    populations: ["Women", "Men", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: "3 Spanish-speaking employees",
-    deliveryMethods: ["In person", "Virtual/telehealth", "Handicap accessible"]
-  },
-  {
-    id: 8,
-    name: "NAMI Walla Walla",
-    category: "Prevention & Recovery Support",
-    description: "Mental health support, education, and peer support groups for adults and youth-focused programming.",
-    phone: "(509) 529-6160",
-    email: "namiwallawalla@gmail.com",
-    address: "",
-    website: "https://namiwallawalla.org",
-    hours: "",
-    services: ["Peer Support", "Support Groups", "Community Building", "Mental Health Education"],
-    requirements: "18+ for most services",
-    populations: ["Women", "Men", "Youth", "Families", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person"]
-  },
-  {
-    id: 9,
-    name: "Walla Walla Public Schools",
-    category: "Intervention Services",
-    description: "School-based services, counseling, community outreach, and support for English learners and migrant families.",
-    phone: "",
-    email: "",
-    address: "",
-    website: "https://www.wwps.org/departments/family-engagement/resources",
-    hours: "",
-    services: ["School-Based Services", "Counseling", "Community Outreach", "Transportation", "Support for English Learners"],
-    requirements: "Must be a student or family of student",
-    populations: ["Women", "Men", "Children", "Youth", "Families"],
-    spanishServices: false,
-    deliveryMethods: ["In person", "In home", "Virtual/telehealth"]
-  },
-  {
-    id: 10,
-    name: "Reach Out",
-    category: "Comprehensive Navigation",
-    description: "Community services navigation for all populations at the Walla Walla Department of Community Health.",
-    phone: "(509) 524-2999",
-    email: "",
-    address: "314 W Main St, Walla Walla, WA 99362",
-    website: "https://www.reachoutww.org",
-    hours: "",
-    services: ["Community Services Navigation"],
-    requirements: "None",
-    populations: ["All populations"],
-    spanishServices: true,
-    deliveryMethods: ["In person", "Virtual/telehealth", "Handicap accessible", "Navigation assistance available"]
-  },
-  {
-    id: 11,
-    name: "Celebrate Recovery: Walla Walla City 7th Day Adventist Church",
-    category: "Recovery Support",
-    description: "Faith-based recovery program offering 12-step support, transportation, and peer support groups.",
-    phone: "(509) 525-9540",
-    email: "mycitychurch@charter.net",
-    address: "2133 Howard St, Walla Walla, WA 99362",
-    website: "https://www.wallawallaadventist.org/ministries/celebrate-recovery",
-    hours: "",
-    services: ["12-Step Support", "Transportation", "Peer Support", "Support Groups", "Recovery Programming"],
-    requirements: "",
-    populations: ["All populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person", "Handicap accessible"]
-  },
-  {
-    id: 12,
-    name: "Greater Health Now",
-    category: "Community Hub",
-    description: "Community referral hub providing connections to health and recovery resources.",
-    phone: "(509) 567-5317",
-    email: "info@greaterhealthnow.org",
-    address: "",
-    website: "https://greaterhealthnow.org",
-    hours: "",
-    services: ["Community Referral Hub"],
-    requirements: "",
-    populations: ["Community at Large"],
-    spanishServices: false,
-    deliveryMethods: []
-  },
-  {
-    id: 13,
-    name: "Anchor Point Counseling PLLC",
-    category: "Mental Health Treatment",
-    description: "Private counseling practice offering mental health services including outpatient/IOP and telehealth.",
-    phone: "(509) 593-8122",
-    email: "",
-    address: "828 S 1st Ave, Walla Walla, WA 99362",
-    website: "https://www.anchorpointcounselingpllc.com",
-    hours: "",
-    services: ["Counseling", "Outpatient/IOP", "Telehealth"],
-    requirements: "Active client at agency",
-    populations: ["All populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person", "Virtual/telehealth", "Handicap accessible"]
-  },
-  {
-    id: 14,
-    name: "Comprehensive Healthcare",
-    category: "Comprehensive Services",
-    description: "Full continuum of care including prevention, intervention, treatment, and recovery support services with Spanish translation available.",
-    phone: "(509) 524-2920",
-    email: "",
-    address: "1520 Kelly Pl, Walla Walla, WA 99362",
-    website: "https://comphc.org",
-    hours: "",
-    services: ["Inpatient/Outpatient Treatment", "Medication Management", "Crisis Services", "Housing Assistance", "Peer Support"],
-    requirements: "",
-    populations: ["All populations"],
-    spanishServices: "Limited on-site Spanish staff, translation services available",
-    deliveryMethods: ["In person", "In home", "Virtual/telehealth", "Handicap accessible"]
-  },
-  {
-    id: 15,
-    name: "Akin: Triple Point Program",
-    category: "Youth Support",
-    description: "Services for 2SLGBTQ+ youth ages 13-18 including resource referral, peer support, and social emotional learning.",
-    phone: "(509) 669-3875",
-    email: "jaquelin.saldana@akinfamily.org",
-    address: "1612 Penny Ln, Walla Walla, WA 99362",
-    website: "https://akinfamily.org",
-    hours: "",
-    services: ["Resource Referral", "Peer Support", "Support Groups", "Food Support"],
-    requirements: "2SLGBTQ+ youth ages 13-18 in middle/high school",
-    populations: ["Women", "Men", "Youth", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: "Referrals only",
-    deliveryMethods: ["In person", "Handicap accessible"]
-  },
-  {
-    id: 16,
-    name: "Blue Mountain Heart to Heart Second Ave",
-    category: "Comprehensive Services",
-    description: "Additional location providing harm reduction, medical support, and peer services.",
-    phone: "(509) 394-5033",
-    email: "",
-    address: "1129 S Second Avenue, Suite B, Walla Walla, WA 99362",
-    website: "https://bluemountainheart2heart.wordpress.com",
-    hours: "",
-    services: ["Harm Reduction", "Medical Support", "Peer Support"],
-    requirements: "Depends on program",
-    populations: ["Women", "Men", "Veterans", "Formerly Incarcerated", "LGBTQIA+", "Indigenous Populations"],
-    spanishServices: true,
-    deliveryMethods: ["In person"]
-  },
-  {
-    id: 17,
-    name: "Celebrate Recovery: Walla Walla Grace Church",
-    category: "Recovery Support",
-    description: "Faith-based recovery program offering support groups and fellowship.",
-    phone: "(509) 876-0000",
-    email: "info@graceww.org",
-    address: "116 S 3rd Ave., Walla Walla, WA 99362",
-    website: "https://www.graceww.org/cr",
-    hours: "",
-    services: ["Support Groups", "Recovery Programming", "Fellowship"],
-    requirements: "",
-    populations: ["All populations"],
-    spanishServices: false,
-    deliveryMethods: ["In person"]
+import { useState, useEffect } from 'react';
+import ResourceList from '@/components/resources/ResourceList';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Search } from 'lucide-react';
+
+// Type for the API response
+interface ApiResource {
+  id: number;
+  name: string;
+  category_name?: string;
+  description: string;
+  phone: string | null;
+  address: string | null;
+  city: string;
+  state: string;
+  zip_code: string;
+  website: string | null;
+  hours_of_operation: string | null;
+  tags?: string[] | string;
+}
+
+// Type for the transformed resource (what ResourceList expects)
+interface TransformedResource {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  phone: string;
+  address: string;
+  website: string;
+  hours: string;
+  services: string[];
+}
+
+// Transform API resource to ResourceList format
+function transformResource(apiResource: ApiResource): TransformedResource {
+  // Build full address from components
+  // If address already contains city/state, use it as-is; otherwise combine components
+  let fullAddress = '';
+  if (apiResource.address) {
+    // Check if address already contains city/state info
+    const addressLower = apiResource.address.toLowerCase();
+    const cityLower = apiResource.city?.toLowerCase() || '';
+    if (cityLower && addressLower.includes(cityLower)) {
+      // Address already contains city, use as-is
+      fullAddress = apiResource.address;
+    } else {
+      // Combine address components
+      const addressParts = [
+        apiResource.address,
+        apiResource.city,
+        apiResource.state,
+        apiResource.zip_code
+      ].filter(Boolean);
+      fullAddress = addressParts.join(', ');
+    }
+  } else {
+    // No address, just use city/state/zip
+    const addressParts = [
+      apiResource.city,
+      apiResource.state,
+      apiResource.zip_code
+    ].filter(Boolean);
+    fullAddress = addressParts.join(', ');
   }
-];
+
+  // Parse tags/services
+  let services: string[] = [];
+  if (apiResource.tags) {
+    if (Array.isArray(apiResource.tags)) {
+      services = apiResource.tags;
+    } else if (typeof apiResource.tags === 'string') {
+      services = apiResource.tags.split(',').map(t => t.trim()).filter(Boolean);
+    }
+  }
+
+  return {
+    id: apiResource.id,
+    name: apiResource.name,
+    category: apiResource.category_name || 'Uncategorized',
+    description: apiResource.description || '',
+    phone: apiResource.phone || '',
+    address: fullAddress,
+    website: apiResource.website || '',
+    hours: apiResource.hours_of_operation || '',
+    services: services
+  };
+}
 
 export default function Home() {
+  const [resources, setResources] = useState<TransformedResource[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Fetch resources from backend with optional search query
+  const fetchResources = async (query?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Build URL with query parameter if provided
+      const url = query && query.trim() 
+        ? `/api/resources?query=${encodeURIComponent(query.trim())}`
+        : '/api/resources';
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch resources');
+      }
+      
+      const data = await response.json();
+      const apiResources: ApiResource[] = data.data || [];
+      
+      // Transform API resources to the format expected by ResourceList
+      const transformedResources = apiResources.map(transformResource);
+      
+      setResources(transformedResources);
+    } catch (err) {
+      console.error('Error fetching resources:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while fetching resources');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    fetchResources();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Debounced search as user types
+  useEffect(() => {
+    // Clear any existing timeout
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        // Fetch with search query
+        fetchResources(searchQuery);
+      } else {
+        // If search is empty, fetch all resources
+        fetchResources();
+      }
+    }, 300); // 300ms debounce delay
+
+    // Cleanup timeout on unmount or when searchQuery changes
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  // Handle search button click (optional, for immediate search)
+  const handleSearch = () => {
+    if (!searchQuery.trim()) {
+      // If search is empty, fetch all resources
+      fetchResources();
+    } else {
+      // Fetch with search query
+      fetchResources(searchQuery);
+    }
+  };
+
+  // Handle Enter key in search input (optional, for immediate search)
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex items-center justify-center min-h-[500px]">
+          <div className="text-center animate-in fade-in duration-500">
+            <div className="relative mx-auto mb-6">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Search className="w-6 h-6 text-blue-600 animate-pulse" />
+              </div>
+            </div>
+            <p className="text-gray-600 text-lg font-medium">Loading resources...</p>
+            <p className="text-gray-400 text-sm mt-2">Please wait while we fetch the latest information</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-12">
+        <div className="max-w-2xl mx-auto bg-gradient-to-br from-red-50 to-red-100 border-0 rounded-2xl shadow-lg p-8 animate-in fade-in slide-in-from-top duration-500">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-red-800 font-bold text-xl mb-2">Error Loading Resources</h2>
+            <p className="text-red-700 mb-6">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-100 transition-all duration-300"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-12">
+      {/* Search Bar */}
+      <div className="mb-12 animate-in fade-in slide-in-from-top duration-700">
+        <div className="flex gap-3 max-w-2xl mx-auto">
+          <div className="flex-1 relative group">
+            <Input
+              type="text"
+              placeholder="Search resources by name, category, description, location, or services..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="w-full pr-12 h-12 border-0 bg-white shadow-md hover:shadow-lg focus-visible:shadow-xl focus-visible:ring-2 focus-visible:ring-blue-500/20 transition-all duration-300 rounded-xl pl-4 text-base placeholder:text-gray-400"
+            />
+            <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300" />
+          </div>
+          <Button
+            onClick={handleSearch}
+            className="h-12 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-100 transition-all duration-300 flex items-center gap-2 border-0"
+          >
+            <Search className="h-4 w-4" />
+            Search
+          </Button>
+        </div>
+        {searchQuery && !loading && (
+          <p className="text-sm text-gray-600 mt-3 text-center animate-in fade-in duration-300">
+            {resources.length === 0
+              ? 'No resources found matching your search.'
+              : `Found ${resources.length} resource${resources.length !== 1 ? 's' : ''} matching "${searchQuery}"`}
+          </p>
+        )}
+      </div>
+
       <ResourceList resources={resources} />
     </div>
   );

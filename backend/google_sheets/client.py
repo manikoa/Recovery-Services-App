@@ -19,7 +19,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 def get_google_sheets_service():
     """
     Returns a Google Sheets service instance using service account credentials.
-    
+       jkjkkjjk
     Returns:
         Resource: A configured Google Sheets API service
     """
@@ -41,7 +41,13 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
     Get resources from Google Sheets with optional filters.
     
     Args:
-        filters: Dictionary of filters to apply (category, city, state, status)
+        filters: Dictionary of filters to apply (category, city, state, status, query)
+                 - category: Filter by category name (exact match)
+                 - city: Filter by city (partial match)
+                 - state: Filter by state (exact match, case-insensitive)
+                 - status: Filter by status (exact match, case-insensitive)
+                 - query: Search query that searches across name, description, category,
+                          address, city, state, and tags (partial match, case-insensitive)
         
     Returns:
         List of resources as dictionaries
@@ -93,6 +99,23 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                     continue
                 if 'status' in filters and resource.get('status', '').lower() != filters['status'].lower():
                     continue
+                if 'query' in filters:
+                    # Search across multiple fields
+                    query = filters['query'].lower().strip()
+                    if query:
+                        searchable_fields = [
+                            resource.get('name', ''),
+                            resource.get('description', ''),
+                            resource.get('category_name', ''),
+                            resource.get('address', ''),
+                            resource.get('city', ''),
+                            resource.get('state', ''),
+                            resource.get('tags', ''),
+                        ]
+                        # Check if query matches any field
+                        matches = any(query in str(field).lower() for field in searchable_fields if field)
+                        if not matches:
+                            continue
             else:
                 # Default to active resources
                 if resource.get('status', '').lower() != 'active':

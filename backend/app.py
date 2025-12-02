@@ -192,7 +192,7 @@ if __name__ == '__main__':
     import os
     
     # Get port from environment or use default
-    port = int(os.getenv('PORT', 8000))
+    port = int(os.getenv('PORT', 8001))
     
     print("Starting Recovery Services API...")
     print(f"Server: http://127.0.0.1:{port}")
@@ -211,5 +211,5 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Failed to start server: {e}")
         if "Address already in use" in str(e):
-            print(f"Port {port} is busy. Try: PORT=8001 python app.py")
+            print(f"Port {port} is busy. Try: PORT=5001 python app.py")
 
