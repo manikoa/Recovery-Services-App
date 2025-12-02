@@ -2,92 +2,41 @@
  * Resource List Component
  * 
  * This component displays a list of resources with filtering capabilities.
- * It fetches data from Google Sheets via API routes and renders resource cards.
- * 
- * Expected features:
- * 1. Fetch resources from API
- * 2. Apply filters based on props
- * 3. Display resources in a responsive grid
- * 4. Handle loading, error, and empty states
- * 
- * Implementation notes:
- * - Use the resources API functions from @/lib/api/resources
- * - Implement useEffect to fetch data when filters change
- * - Use the Card component to display each resource
- * - Include pagination if needed
+ * It uses the ResourceCard component to render each resource in a responsive grid.
  */
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import ResourceCard from './ResourceCard';
 
-// Uncomment when implementing resource fetching
-// import { getResources, type Resource, type ResourceFilters } from "@/lib/api/resources";
+interface Resource {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  phone: string;
+  address: string;
+  website: string;
+  hours: string;
+  services: string[];
+}
 
 interface ResourceListProps {
-  filters?: any; // Replace with ResourceFilters type
-  title?: string;
+  resources: Resource[];
 }
 
-export default function ResourceList({ filters, title = "Resources" }: ResourceListProps) {
-  // Uncomment when implementing resource fetching
-  // const [resources, setResources] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Add your resource list implementation here
-  
-  // Example loading state
-  if (loading) {
-    return (
-      <div className="flex justify-center py-8">
-        <div className="animate-pulse text-center">
-          <p>Loading resources...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Example error state
-  if (error) {
-    return (
-      <div className="rounded-md bg-destructive/10 p-4 text-center text-destructive">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  // Example empty state
+export default function ResourceList({ resources }: ResourceListProps) {
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{title}</h2>
-      
-      {/* Replace with actual resource list */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <ResourceCard 
-          title="Example Resource" 
-          description="This is a placeholder for a resource card."
-          href="/resources/example"
-        />
+    <>
+      <div className="mb-6">
+        <p className="text-gray-600">
+          Showing <span className="font-semibold">{resources.length}</span> resource{resources.length !== 1 ? 's' : ''}
+        </p>
       </div>
-    </div>
-  );
-}
 
-// Example ResourceCard component
-function ResourceCard({ title, description, href }: { title: string; description: string; href: string }) {
-  return (
-    <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter className="mt-auto pt-6">
-        <Button variant="outline" className="w-full" asChild>
-          <Link href={href}>View Details</Link>
-        </Button>
-      </CardFooter>
-    </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {resources.map((resource) => (
+          <ResourceCard key={resource.id} resource={resource} />
+        ))}
+      </div>
+    </>
   );
 }

@@ -17,41 +17,16 @@
  * - Use the useAuth hook to access authentication state
  */
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { NavigationMenu, NavigationMenuList } from "@/components/ui/navigation-menu";
-
-// Uncomment when implementing authentication
-// import { useAuth } from "@/hooks/useAuth";
-// import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-// import AuthForm from "@/components/auth/AuthForm";
-// import UserProfile from "@/components/auth/UserProfile";
-
-export function Header() {
-  // Uncomment when implementing authentication
-  // const { user, loading } = useAuth();
-  
+export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold">Recovery Services</span>
-        </Link>
-        
-        {/* Add your navigation menu implementation here */}
-        <NavigationMenu>
-          <NavigationMenuList>
-            {/* Add navigation menu items here */}
-          </NavigationMenuList>
-        </NavigationMenu>
-        
-        {/* Add authentication controls here */}
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            Provider Login
-          </Button>
-          <Button size="sm">Get Help</Button>
-        </div>
+    <header className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold mb-2">
+          Walla Walla Recovery Resources
+        </h1>
+        <p className="text-blue-100 text-lg">
+          Find support and services for your recovery journey
+        </p>
       </div>
     </header>
   );

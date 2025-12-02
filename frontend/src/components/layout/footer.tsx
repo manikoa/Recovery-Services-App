@@ -17,35 +17,24 @@
  * - Include copyright information and acknowledgments
  */
 
-import Link from "next/link";
-
-export function Footer() {
+export default function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container py-8 md:py-12">
-        {/* Add your footer implementation here */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {/* Site information */}
-          <div>
-            <h3 className="text-lg font-semibold">Recovery Services</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Connecting individuals in need with essential recovery resources.
-            </p>
-          </div>
-          
-          {/* Links section */}
-          <div>
-            {/* Add footer links here */}
-          </div>
-          
-          {/* Provider section */}
-          <div>
-            {/* Add provider links here */}
-          </div>
+    <footer className="bg-white mt-16 border-t border-gray-200">
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-gray-600 mb-2">24/7 Crisis Support</p>
+          <a 
+            href="tel:988" 
+            className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors"
+          >
+            Call or Text 988
+          </a>
+          <p className="text-sm text-gray-500 mt-4">
+            If you or someone you know is in crisis, help is available.
+          </p>
         </div>
-        
-        {/* Copyright section */}
-        <div className="mt-8 border-t pt-6 text-center text-sm text-muted-foreground">
+      {/* Copyright section */}
+      <div className="mt-8 border-t border-gray-500 pt-6 text-center text-sm text-gray-500">
           <p>&copy; {new Date().getFullYear()} Community Change Team. All rights reserved.</p>
         </div>
       </div>
