@@ -19,9 +19,11 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 def get_google_sheets_service():
     """
     Returns a Google Sheets service instance using service account credentials.
-       jkjkkjjk
+    
     Returns:
-        Resource: A configured Google Sheets API service
+        tuple: A tuple containing (service, spreadsheet_id) where:
+            - service: A configured Google Sheets API service
+            - spreadsheet_id: The ID of the Google Spreadsheet
     """
     creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_PATH')
     spreadsheet_id = os.getenv('GOOGLE_SPREADSHEET_ID')
@@ -89,15 +91,29 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
             resource['category_id'] = int(resource.get('category_id', 0)) if resource.get('category_id', '').isdigit() else 0
             resource['requires_verification'] = resource.get('requires_verification', '').lower() == 'true'
             
+            # Skip resources with invalid IDs
+            if resource['id'] == 0:
+                continue
+            
             # Apply filters
+            # Check status filter (applies whether filters dict exists or not)
+            if filters and 'status' in filters:
+                # If status filter is explicitly set, apply it strictly
+                if resource.get('status', '').lower() != filters['status'].lower():
+                    continue
+            else:
+                # Default behavior: show active and pending resources (exclude inactive/archived)
+                resource_status = resource.get('status', '').lower()
+                if resource_status not in ['active', 'pending']:
+                    continue
+            
+            # Apply other filters (only if filters dict is provided)
             if filters:
                 if 'category' in filters and resource.get('category_name', '').lower() != filters['category'].lower():
                     continue
                 if 'city' in filters and filters['city'].lower() not in resource.get('city', '').lower():
                     continue
                 if 'state' in filters and resource.get('state', '').upper() != filters['state'].upper():
-                    continue
-                if 'status' in filters and resource.get('status', '').lower() != filters['status'].lower():
                     continue
                 if 'query' in filters:
                     # Search across multiple fields
@@ -116,10 +132,6 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                         matches = any(query in str(field).lower() for field in searchable_fields if field)
                         if not matches:
                             continue
-            else:
-                # Default to active resources
-                if resource.get('status', '').lower() != 'active':
-                    continue
             
             resources.append(resource)
         
