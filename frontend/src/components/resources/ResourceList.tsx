@@ -21,9 +21,10 @@ interface Resource {
 
 interface ResourceListProps {
   resources: Resource[];
+  onCategoryClick: (category: string) => void;
 }
 
-export default function ResourceList({ resources }: ResourceListProps) {
+export default function ResourceList({ resources, onCategoryClick }: ResourceListProps) {
   return (
     <>
       <div className="mb-6">
@@ -34,7 +35,11 @@ export default function ResourceList({ resources }: ResourceListProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {resources.map((resource) => (
-          <ResourceCard key={resource.id} resource={resource} />
+          <ResourceCard
+            key={resource.id}
+            resource={resource}
+            onCategoryClick={onCategoryClick}
+          />
         ))}
       </div>
     </>
