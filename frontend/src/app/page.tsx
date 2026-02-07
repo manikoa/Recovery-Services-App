@@ -1,19 +1,21 @@
 import SearchableResourceList from '@/components/resources/SearchableResourceList';
 
-// Type for the API response
-interface ApiResource {
+// Type for the Google Apps Script API response
+interface GoogleSheetResource {
   id: number;
   name: string;
-  category_name?: string;
+  category: string;
   description: string;
-  phone: string | null;
-  address: string | null;
-  city: string;
-  state: string;
-  zip_code: string;
-  website: string | null;
-  hours_of_operation: string | null;
-  tags?: string[] | string;
+  phone: string | number;
+  email: string;
+  address: string;
+  website: string;
+  services: string[];
+}
+
+interface GoogleSheetResponse {
+  data: GoogleSheetResource[];
+  success: boolean;
 }
 
 // Type for the transformed resource (what ResourceList expects)
@@ -30,65 +32,26 @@ interface TransformedResource {
 }
 
 // Transform API resource to ResourceList format
-function transformResource(apiResource: ApiResource): TransformedResource {
-  // Build full address from components
-  // If address already contains city/state, use it as-is; otherwise combine components
-  let fullAddress = '';
-  if (apiResource.address) {
-    // Check if address already contains city/state info
-    const addressLower = apiResource.address.toLowerCase();
-    const cityLower = apiResource.city?.toLowerCase() || '';
-    if (cityLower && addressLower.includes(cityLower)) {
-      // Address already contains city, use as-is
-      fullAddress = apiResource.address;
-    } else {
-      // Combine address components
-      const addressParts = [
-        apiResource.address,
-        apiResource.city,
-        apiResource.state,
-        apiResource.zip_code
-      ].filter(Boolean);
-      fullAddress = addressParts.join(', ');
-    }
-  } else {
-    // No address, just use city/state/zip
-    const addressParts = [
-      apiResource.city,
-      apiResource.state,
-      apiResource.zip_code
-    ].filter(Boolean);
-    fullAddress = addressParts.join(', ');
-  }
-
-  // Parse tags/services
-  let services: string[] = [];
-  if (apiResource.tags) {
-    if (Array.isArray(apiResource.tags)) {
-      services = apiResource.tags;
-    } else if (typeof apiResource.tags === 'string') {
-      services = apiResource.tags.split(',').map(t => t.trim()).filter(Boolean);
-    }
-  }
-
+function transformResource(resource: GoogleSheetResource): TransformedResource {
   return {
-    id: apiResource.id,
-    name: apiResource.name,
-    category: apiResource.category_name || 'Uncategorized',
-    description: apiResource.description || '',
-    phone: apiResource.phone || '',
-    address: fullAddress,
-    website: apiResource.website || '',
-    hours: apiResource.hours_of_operation || '',
-    services: services
+    id: resource.id,
+    name: resource.name,
+    category: resource.category || 'Uncategorized',
+    description: resource.description || '',
+    phone: resource.phone ? String(resource.phone) : '',
+    address: resource.address || '', // The API currently returns empty string, but we map it just in case
+    website: resource.website || '',
+    hours: '', // Not currently in the spreadsheet data
+    services: resource.services || []
   };
 }
 
 async function getResources(): Promise<TransformedResource[]> {
-  const BACKEND_API_URL = process.env.BACKEND_API_URL || 'http://localhost:8001';
+  // Use the verified Google Apps Script URL
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzFsGB4hTPHQVCtXmdrkXhNq38MWjEOVoMCHWn3j7WP2Wcodabz81hk6q19i3PD3I5N/exec';
 
   try {
-    const response = await fetch(`${BACKEND_API_URL}/api/resources`, {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
       cache: 'no-store', // Ensure fresh data
       headers: {
         'Content-Type': 'application/json',
@@ -97,13 +60,17 @@ async function getResources(): Promise<TransformedResource[]> {
 
     if (!response.ok) {
       console.error('Failed to fetch resources:', response.status, response.statusText);
-      // Return empty array on error to allow page to render
       return [];
     }
 
-    const data = await response.json();
-    const apiResources: ApiResource[] = data.data || [];
-    return apiResources.map(transformResource);
+    const json: GoogleSheetResponse = await response.json();
+
+    if (!json.success || !json.data) {
+      console.error('API returned unsuccessful response:', json);
+      return [];
+    }
+
+    return json.data.map(transformResource);
   } catch (error) {
     console.error('Error fetching resources:', error);
     return [];

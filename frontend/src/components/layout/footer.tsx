@@ -80,7 +80,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} Community Change Team
+            &copy; {new Date().getFullYear()} <a href="https://www.wwcommunitychangeteam.com/" target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 transition-colors">Community Change Team</a>
           </p>
         </div>
       </div>

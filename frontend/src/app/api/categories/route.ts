@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
         'Content-Type': 'application/json',
       },
     });
-    
+    // log response status 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
         { status: response.status }
       );
     }
-    
+    // log response data 
     const data = await response.json();
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
