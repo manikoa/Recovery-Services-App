@@ -52,7 +52,8 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                           address, city, state, and tags (partial match, case-insensitive)
         
     Returns:
-        List of resources as dictionaries
+        List of resources as dictionaries. Each dictionary includes a hidden '_row' key
+        indicating the source row number (1-based) in the spreadsheet.
     """
     try:
         service, spreadsheet_id = get_google_sheets_service()
@@ -79,12 +80,17 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
         ]
         
         resources = []
-        for row in values:
+        # Use enumerate to track the original row index from the API response
+        # The API request started at A2, so index 0 is row 2.
+        for idx, row in enumerate(values):
             if len(row) < len(headers):
                 # Pad row with empty strings if needed
                 row.extend([''] * (len(headers) - len(row)))
             
             resource = dict(zip(headers, row[:len(headers)]))
+            
+            # Store the actual row number (1-based) for updates
+            resource['_row'] = idx + 2
             
             # Convert string values to appropriate types
             resource['id'] = int(resource.get('id', 0)) if resource.get('id', '').isdigit() else 0
@@ -99,7 +105,8 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
             # Check status filter (applies whether filters dict exists or not)
             if filters and 'status' in filters:
                 # If status filter is explicitly set, apply it strictly
-                if resource.get('status', '').lower() != filters['status'].lower():
+                # If status is None, it means "all statuses" (don't filter)
+                if filters['status'] is not None and resource.get('status', '').lower() != filters['status'].lower():
                     continue
             else:
                 # Default behavior: show active and pending resources (exclude inactive/archived)
@@ -274,17 +281,20 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        # Get all resources to find the row
-        resources = get_resources({'status': None})  # Get all including inactive
-        row_index = None
+        # Get all resources to find the correct row index
+        # We need ALL resources to ensure we find the ID even if status is not active
+        resources = get_resources({'status': None})
         
-        for idx, resource in enumerate(resources):
-            if resource.get('id') == resource_id:
-                row_index = idx + 2  # +2 because we skip header and 0-indexed
+        target_resource = None
+        for r in resources:
+            if r.get('id') == resource_id:
+                target_resource = r
                 break
         
-        if row_index is None:
+        if not target_resource or '_row' not in target_resource:
             return False
+            
+        row_index = target_resource['_row']
         
         # Map updates to column indices (A=0, B=1, etc.)
         column_map = {
@@ -308,23 +318,29 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
             'updated_at': 19
         }
         
-        # Prepare update requests
-        update_requests = []
+        # Prepare batch update data
+        data = []
         for field, value in updates.items():
             if field in column_map:
                 col_letter = chr(65 + column_map[field])  # Convert to A, B, C, etc.
                 range_name = f'Resources!{col_letter}{row_index}'
-                
-                body = {
+                data.append({
+                    'range': range_name,
                     'values': [[str(value)]]
-                }
-                
-                service.spreadsheets().values().update(
-                    spreadsheetId=spreadsheet_id,
-                    range=range_name,
-                    valueInputOption='RAW',
-                    body=body
-                ).execute()
+                })
+        
+        if not data:
+            return True  # No valid fields to update
+            
+        body = {
+            'valueInputOption': 'RAW',
+            'data': data
+        }
+        
+        service.spreadsheets().values().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body=body
+        ).execute()
         
         return True
         

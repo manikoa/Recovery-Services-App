@@ -6,7 +6,7 @@
  */
 
 // API base URL - defaults to localhost:5000, can be overridden with env var
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
 
 // Type definitions
 export type ResourceCategory = {
@@ -93,14 +93,14 @@ export async function getResources(filters?: ResourceFilters): Promise<Resource[
     if (filters?.state) params.append('state', filters.state);
     if (filters?.status) params.append('status', filters.status);
     if (filters?.query) params.append('query', filters.query);
-    
+
     const url = `${API_BASE_URL}/api/resources${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await fetch(url);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch resources');
     }
-    
+
     const data = await response.json();
     return data.data || [];
   } catch (error) {
@@ -141,11 +141,11 @@ export async function submitResourceUpdate(resourceId: number, updates: any) {
       },
       body: JSON.stringify(updates),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to update resource');
     }
-    
+
     const data = await response.json();
     return data;
   } catch (error) {
@@ -173,11 +173,11 @@ export async function createResource(resource: Omit<Resource, 'id' | 'created_at
       },
       body: JSON.stringify(resource),
     });
-    
+
     if (!response.ok) {
       throw new Error('Failed to create resource');
     }
-    
+
     const data = await response.json();
     return data.data || null;
   } catch (error) {
