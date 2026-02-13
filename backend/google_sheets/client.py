@@ -73,10 +73,11 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
         
         # Get headers from first row (or define them)
         headers = [
-            'id', 'name', 'slug', 'description', 'category_id', 'category_name',
-            'address', 'city', 'state', 'zip_code', 'phone', 'email', 'website',
-            'hours_of_operation', 'eligibility_criteria', 'status',
-            'requires_verification', 'tags', 'created_at', 'updated_at'
+            'id', 'name', 'slug', 'sheet_description', 'address', 'phone', 'email', 'website',
+            'eligibility_criteria', 'population_served', 'hours_of_operation', 'status',
+            'languages', 'accessibility', 'organization_type', 'primary_services', 
+            'secondary_services', 'tags', 'notes', 'last_updated', 'verified_by', 
+            'verification_date', 'keywords', 'cost'
         ]
         
         resources = []
@@ -93,16 +94,52 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
             resource['_row'] = idx + 2
             
             # Convert string values to appropriate types
-            resource['id'] = int(resource.get('id', 0)) if resource.get('id', '').isdigit() else 0
-            resource['category_id'] = int(resource.get('category_id', 0)) if resource.get('category_id', '').isdigit() else 0
-            resource['requires_verification'] = resource.get('requires_verification', '').lower() == 'true'
+            resource['id'] = int(resource.get('id', 0)) if str(resource.get('id', '')).isdigit() else 0
+            # category_id is not in sheet, default to 0
+            resource['category_id'] = 0 
             
+            # Map keys to expected API format
+            resource['description'] = resource.get('sheet_description', '')
+            
+            # Derive a short category name from primary_services or organization_type
+            # expecting comma separated values
+            primary = resource.get('primary_services', '')
+            if primary:
+                resource['category_name'] = primary.split(',')[0].strip()
+            else:
+                resource['category_name'] = resource.get('organization_type', 'Uncategorized')
+            
+            # Simple address parsing (very basic)
+            full_address = resource.get('address', '')
+            resource['city'] = ''
+            resource['state'] = ''
+            resource['zip_code'] = ''
+            
+            if full_address:
+                parts = full_address.split(',')
+                if len(parts) >= 3:
+                     # Attempt to parse "Street, City, WA Zip"
+                     try:
+                         resource['city'] = parts[-2].strip()
+                         state_zip = parts[-1].strip().split(' ')
+                         if len(state_zip) >= 2:
+                             resource['state'] = state_zip[0]
+                             resource['zip_code'] = state_zip[1]
+                     except:
+                         pass
+
+            # Combine tags and keywords
+            tags_list = []
+            if resource.get('tags'):
+                tags_list.extend([t.strip() for t in resource['tags'].split(',')])
+            if resource.get('keywords'):
+                tags_list.extend([t.strip() for t in resource['keywords'].split(',')])
+            resource['tags'] = tags_list
+
             # Skip resources with invalid IDs
             if resource['id'] == 0:
                 continue
             
-            # Apply filters
-            # Check status filter (applies whether filters dict exists or not)
             if filters and 'status' in filters:
                 # If status filter is explicitly set, apply it strictly
                 # If status is None, it means "all statuses" (don't filter)
@@ -300,22 +337,27 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
         column_map = {
             'name': 1,
             'slug': 2,
-            'description': 3,
-            'category_id': 4,
-            'category_name': 5,
-            'address': 6,
-            'city': 7,
-            'state': 8,
-            'zip_code': 9,
-            'phone': 10,
-            'email': 11,
-            'website': 12,
-            'hours_of_operation': 13,
-            'eligibility_criteria': 14,
-            'status': 15,
-            'requires_verification': 16,
+            'category_name': 3,
+            'address': 4,
+            'phone': 5,
+            'email': 6,
+            'website': 7,
+            'eligibility_criteria': 8,
+            'population_served': 9,
+            'hours_of_operation': 10,
+            'status': 11,
+            'languages': 12,
+            'accessibility': 13,
+            'organization_type': 14,
+            'primary_services': 15,
+            'secondary_services': 16,
             'tags': 17,
-            'updated_at': 19
+            'notes': 18,
+            'last_updated': 19,
+            'verified_by': 20,
+            'verification_date': 21,
+            'keywords': 22,
+            'cost': 23
         }
         
         # Prepare batch update data
