@@ -5,63 +5,20 @@
  * All API calls go to the Python backend server.
  */
 
-// API base URL - defaults to localhost:5000, can be overridden with env var
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001';
+import { API_CONFIG } from '@/lib/constants';
+import type { Resource, ResourceCategory, ResourceTag, ResourceFilters } from '@/types/resource';
 
-// Type definitions
-export type ResourceCategory = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon?: string | null;
-};
+// API base URL
+const { BASE_URL } = API_CONFIG;
 
-export type ResourceTag = {
-  id: number;
-  name: string;
-  slug: string;
-};
-
-export type Resource = {
-  id: number;
-  name: string;
-  slug: string;
-  description: string;
-  category_id: number;
-  category?: ResourceCategory;
-  category_name?: string;
-  address: string | null;
-  city: string;
-  state: string;
-  zip_code: string;
-  phone: string | null;
-  email: string | null;
-  website: string | null;
-  hours_of_operation: string | null;
-  eligibility_criteria: string | null;
-  status: string;
-  requires_verification: boolean;
-  tags?: ResourceTag[] | string[];
-  created_at: string;
-  updated_at: string;
-};
-
-export type ResourceFilters = {
-  category?: string;
-  city?: string;
-  state?: string;
-  tags?: string[];
-  query?: string;
-  status?: string;
-};
+export type { Resource, ResourceCategory, ResourceTag, ResourceFilters };
 
 /**
  * Get all resource categories
  */
 export async function getResourceCategories(): Promise<ResourceCategory[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/categories`);
+    const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORIES}`);
     if (!response.ok) {
       throw new Error('Failed to fetch categories');
     }
@@ -94,7 +51,7 @@ export async function getResources(filters?: ResourceFilters): Promise<Resource[
     if (filters?.status) params.append('status', filters.status);
     if (filters?.query) params.append('query', filters.query);
 
-    const url = `${API_BASE_URL}/api/resources${params.toString() ? `?${params.toString()}` : ''}`;
+    const url = `${BASE_URL}${API_CONFIG.ENDPOINTS.RESOURCES}${params.toString() ? `?${params.toString()}` : ''}`;
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -114,7 +71,7 @@ export async function getResources(filters?: ResourceFilters): Promise<Resource[
  */
 export async function getResourceBySlug(slug: string): Promise<Resource | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/resources/${slug}`);
+    const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.RESOURCES}/${slug}`);
     if (!response.ok) {
       if (response.status === 404) {
         return null;
@@ -134,7 +91,7 @@ export async function getResourceBySlug(slug: string): Promise<Resource | null> 
  */
 export async function submitResourceUpdate(resourceId: number, updates: any) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/resources/${resourceId}`, {
+    const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.RESOURCES}/${resourceId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -166,7 +123,7 @@ export async function updateResource(resourceId: number, updates: any) {
  */
 export async function createResource(resource: Omit<Resource, 'id' | 'created_at' | 'updated_at'>) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/resources`, {
+    const response = await fetch(`${BASE_URL}${API_CONFIG.ENDPOINTS.RESOURCES}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -8,13 +8,12 @@ from typing import List, Dict, Optional, Any
 from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from dotenv import load_dotenv
+import sys
+import os
 
-# Load environment variables
-load_dotenv()
-
-# Google Sheets API scope
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+# Add parent directory to path to import config
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import Config
 
 def get_google_sheets_service():
     """
@@ -25,15 +24,15 @@ def get_google_sheets_service():
             - service: A configured Google Sheets API service
             - spreadsheet_id: The ID of the Google Spreadsheet
     """
-    creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_PATH')
-    spreadsheet_id = os.getenv('GOOGLE_SPREADSHEET_ID')
+    creds_path = Config.GOOGLE_SERVICE_ACCOUNT_PATH
+    spreadsheet_id = Config.GOOGLE_SPREADSHEET_ID
     
     if not creds_path:
         raise ValueError("GOOGLE_SERVICE_ACCOUNT_PATH must be set in environment variables")
     if not spreadsheet_id:
         raise ValueError("GOOGLE_SPREADSHEET_ID must be set in environment variables")
     
-    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
+    creds = Credentials.from_service_account_file(creds_path, scopes=Config.SCOPES)
     service = build('sheets', 'v4', credentials=creds)
     
     return service, spreadsheet_id
@@ -58,8 +57,8 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        # Read from the Resources sheet (assuming first sheet or named "Resources")
-        range_name = 'Resources!A2:Z'  # Skip header row
+        # Read from the Resources sheet
+        range_name = Config.SHEETS['RESOURCES']
         
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
@@ -71,14 +70,8 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
         if not values:
             return []
         
-        # Get headers from first row (or define them)
-        headers = [
-            'id', 'name', 'slug', 'sheet_description', 'address', 'phone', 'email', 'website',
-            'eligibility_criteria', 'population_served', 'hours_of_operation', 'status',
-            'languages', 'accessibility', 'organization_type', 'primary_services', 
-            'secondary_services', 'tags', 'notes', 'last_updated', 'verified_by', 
-            'verification_date', 'keywords', 'cost'
-        ]
+        # Get headers from Config
+        headers = Config.RESOURCE_HEADERS
         
         resources = []
         # Use enumerate to track the original row index from the API response
@@ -213,7 +206,7 @@ def get_resource_categories() -> List[Dict[str, Any]]:
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        range_name = 'Categories!A2:D'  # Assuming Categories sheet exists
+        range_name = Config.SHEETS['CATEGORIES']
         
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
@@ -283,7 +276,9 @@ def create_resource(resource_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             resource_data.get('updated_at', '')
         ]
         
-        range_name = 'Resources!A2:Z'
+        
+        
+        range_name = Config.SHEETS['RESOURCES']
         
         body = {
             'values': [row]
@@ -334,31 +329,10 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
         row_index = target_resource['_row']
         
         # Map updates to column indices (A=0, B=1, etc.)
-        column_map = {
-            'name': 1,
-            'slug': 2,
-            'category_name': 3,
-            'address': 4,
-            'phone': 5,
-            'email': 6,
-            'website': 7,
-            'eligibility_criteria': 8,
-            'population_served': 9,
-            'hours_of_operation': 10,
-            'status': 11,
-            'languages': 12,
-            'accessibility': 13,
-            'organization_type': 14,
-            'primary_services': 15,
-            'secondary_services': 16,
-            'tags': 17,
-            'notes': 18,
-            'last_updated': 19,
-            'verified_by': 20,
-            'verification_date': 21,
-            'keywords': 22,
-            'cost': 23
-        }
+        row_index = target_resource['_row']
+        
+        # Map updates to column indices (A=0, B=1, etc.)
+        column_map = Config.RESOURCE_COLUMN_MAP
         
         # Prepare batch update data
         data = []

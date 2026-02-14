@@ -28,12 +28,14 @@ except ImportError:
         update_resource
     )
 
+from config import Config
+
 app = FastAPI(title="Recovery Services API", version="1.0.0")
 
 # Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=Config.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -189,23 +191,19 @@ async def health_check():
 
 if __name__ == '__main__':
     import uvicorn
-    import os
-    
-    # Get port from environment or use default
-    port = int(os.getenv('PORT', 8001))
     
     print("Starting Recovery Services API...")
-    print(f"Server: http://127.0.0.1:{port}")
-    print(f"API Docs: http://127.0.0.1:{port}/docs")
-    print("Hot reload enabled")
+    print(f"Server: http://{Config.HOST}:{Config.PORT}")
+    print(f"API Docs: http://{Config.HOST}:{Config.PORT}/docs")
+    print(f"Hot reload: {Config.DEBUG}")
     print("=" * 50)
     
     try:
         uvicorn.run(
             "app:app",
-            host="127.0.0.1",
-            port=port,
-            reload=True,
+            host=Config.HOST,
+            port=Config.PORT,
+            reload=Config.DEBUG,
             log_level="info"
         )
     except Exception as e:

@@ -5,6 +5,7 @@ Production-ready server runner for Recovery Services API
 import uvicorn
 import os
 import sys
+from config import Config
 
 def main():
     """Start the FastAPI server with production settings"""
@@ -12,9 +13,9 @@ def main():
     # Default configuration
     config = {
         "app": "app:app",
-        "host": os.getenv("HOST", "127.0.0.1"),
-        "port": int(os.getenv("PORT", 8001)),
-        "reload": os.getenv("RELOAD", "true").lower() == "true",
+        "host": os.getenv("HOST", Config.HOST),
+        "port": int(os.getenv("PORT", Config.PORT)),
+        "reload": os.getenv("RELOAD", str(Config.DEBUG)).lower() == "true",
         "log_level": os.getenv("LOG_LEVEL", "info"),
     }
     

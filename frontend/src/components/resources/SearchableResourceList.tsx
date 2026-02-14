@@ -13,18 +13,8 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-
-interface Resource {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    phone: string;
-    address: string;
-    website: string;
-    hours: string;
-    services: string[];
-}
+import { Resource } from '@/types/resource';
+import { UI_CONSTANTS } from '@/lib/constants';
 
 interface SearchableResourceListProps {
     initialResources: Resource[];
@@ -32,13 +22,13 @@ interface SearchableResourceListProps {
 
 export default function SearchableResourceList({ initialResources }: SearchableResourceListProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
+    const [selectedCategory, setSelectedCategory] = useState<string>(UI_CONSTANTS.ALL_CATEGORIES);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     // Extract unique categories
     const categories = useMemo(() => {
-        const uniqueCategories = new Set(initialResources.map(r => r.category));
-        return ['All Categories', ...Array.from(uniqueCategories).filter(Boolean).sort()];
+        const uniqueCategories = new Set(initialResources.map(r => r.category_name));
+        return [UI_CONSTANTS.ALL_CATEGORIES, ...Array.from(uniqueCategories).filter(Boolean).sort()] as string[];
     }, [initialResources]);
 
     // Filter resources based on search query and category
@@ -46,8 +36,8 @@ export default function SearchableResourceList({ initialResources }: SearchableR
         let filtered = initialResources;
 
         // Filter by category
-        if (selectedCategory !== 'All Categories') {
-            filtered = filtered.filter(resource => resource.category === selectedCategory);
+        if (selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES) {
+            filtered = filtered.filter(resource => resource.category_name === selectedCategory);
         }
 
         // Filter by search query
@@ -56,9 +46,9 @@ export default function SearchableResourceList({ initialResources }: SearchableR
             filtered = filtered.filter((resource) => {
                 const searchableText = [
                     resource.name,
-                    resource.category,
+                    resource.category_name,
                     resource.description,
-                    resource.services.join(' '),
+                    resource.services?.join(' '),
                     resource.address,
                     resource.phone
                 ].join(' ').toLowerCase();
@@ -70,7 +60,7 @@ export default function SearchableResourceList({ initialResources }: SearchableR
         return filtered;
     }, [initialResources, searchQuery, selectedCategory]);
 
-    const activeFilterCount = selectedCategory !== 'All Categories' ? 1 : 0;
+    const activeFilterCount = selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES ? 1 : 0;
 
     return (
         <div className="space-y-8">
@@ -167,16 +157,16 @@ export default function SearchableResourceList({ initialResources }: SearchableR
 
                     {/* Results Count & Active Filters */}
                     <div className="mt-4 flex flex-col items-center gap-2 animate-in fade-in duration-300 min-h-[2rem] pointer-events-auto relative z-10">
-                        {(searchQuery || selectedCategory !== 'All Categories') && (
+                        {(searchQuery || selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES) && (
                             <div className="flex flex-col items-center gap-2">
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span>Found <span className="font-semibold text-foreground">{filteredResources.length}</span> resource{filteredResources.length !== 1 ? 's' : ''}</span>
-                                    {selectedCategory !== 'All Categories' && (
+                                    {selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES && (
                                         <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 flex items-center gap-1">
                                             {selectedCategory}
                                             <X
                                                 className="h-3 w-3 cursor-pointer hover:text-primary/80"
-                                                onClick={() => setSelectedCategory('All Categories')}
+                                                onClick={() => setSelectedCategory(UI_CONSTANTS.ALL_CATEGORIES)}
                                             />
                                         </Badge>
                                     )}
@@ -195,7 +185,7 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                                     size="sm"
                                     onClick={() => {
                                         setSearchQuery('');
-                                        setSelectedCategory('All Categories');
+                                        setSelectedCategory(UI_CONSTANTS.ALL_CATEGORIES);
                                     }}
                                     className="text-muted-foreground hover:text-foreground hover:bg-accent h-8 text-xs font-medium gap-1.5"
                                 >
