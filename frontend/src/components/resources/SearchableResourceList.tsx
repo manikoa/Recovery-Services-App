@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import ResourceList from './ResourceList';
 import { Input } from '@/components/ui/input';
-import { Search, Filter, X } from 'lucide-react';
+import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -11,10 +11,12 @@ import {
     SheetHeader,
     SheetTitle,
     SheetTrigger,
+    SheetClose,
 } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Resource } from '@/types/resource';
 import { UI_CONSTANTS } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface SearchableResourceListProps {
     initialResources: Resource[];
@@ -28,7 +30,7 @@ export default function SearchableResourceList({ initialResources }: SearchableR
     // Extract unique categories
     const categories = useMemo(() => {
         const uniqueCategories = new Set(initialResources.map(r => r.category_name));
-        return [UI_CONSTANTS.ALL_CATEGORIES, ...Array.from(uniqueCategories).filter(Boolean).sort()] as string[];
+        return Array.from(uniqueCategories).filter(Boolean).sort() as string[];
     }, [initialResources]);
 
     // Filter resources based on search query and category
@@ -60,6 +62,10 @@ export default function SearchableResourceList({ initialResources }: SearchableR
         return filtered;
     }, [initialResources, searchQuery, selectedCategory]);
 
+    const handleCategoryChange = (category: string) => {
+        setSelectedCategory(category);
+    };
+
     const activeFilterCount = selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES ? 1 : 0;
 
     return (
@@ -88,11 +94,11 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                                     className="w-full md:w-auto h-10 rounded-xl gap-2 text-muted-foreground hover:text-primary hover:bg-accent transition-colors font-medium justify-between md:justify-start px-3 md:px-4"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Filter className="h-4 w-4" />
+                                        <SlidersHorizontal className="h-4 w-4" />
                                         <span>Filters</span>
                                     </div>
                                     {activeFilterCount > 0 && (
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary h-5 px-1.5 min-w-[1.25rem] flex items-center justify-center">
+                                        <Badge variant="secondary" className="bg-soft-blue/20 text-blue-900 h-5 px-1.5 min-w-[1.25rem] flex items-center justify-center">
                                             {activeFilterCount}
                                         </Badge>
                                     )}
@@ -116,40 +122,47 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                                 </SheetHeader>
 
                                 <div className="flex-1 overflow-y-auto px-8 pb-8">
-                                    <div className="space-y-8">
-                                        <div className="space-y-4">
-                                            <div className="space-y-3">
-                                                {categories.map((category) => (
-                                                    <div
-                                                        key={category}
-                                                        onClick={() => setSelectedCategory(category)}
-                                                        className={`
-                                                            group flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-300 border
-                                                            ${selectedCategory === category
-                                                                ? 'bg-gray-50 text-gray-900 border-gray-200 shadow-sm'
-                                                                : 'hover:bg-gray-50 border-transparent text-gray-500 hover:text-gray-900'}
-                                                        `}
-                                                    >
-                                                        <span className="text-base font-medium">{category}</span>
-                                                        {selectedCategory === category && (
-                                                            <div className="h-2.5 w-2.5 rounded-full bg-gray-900 shadow-sm" />
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                    <div className="space-y-1">
+                                        <button
+                                            onClick={() => handleCategoryChange(UI_CONSTANTS.ALL_CATEGORIES)}
+                                            className={cn(
+                                                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                                selectedCategory === UI_CONSTANTS.ALL_CATEGORIES
+                                                    ? "bg-[#a7c4ff]/20 text-blue-950 border border-[#a7c4ff]/50 shadow-sm"
+                                                    : "text-gray-600 hover:bg-[#ffd8b3]/30 hover:text-gray-900"
+                                            )}
+                                        >
+                                            {UI_CONSTANTS.ALL_CATEGORIES}
+                                            {selectedCategory === UI_CONSTANTS.ALL_CATEGORIES && (
+                                                <div className="w-2 h-2 rounded-full bg-[#a7c4ff]" />
+                                            )}
+                                        </button>
+                                        {categories.map((category) => (
+                                            <button
+                                                key={category}
+                                                onClick={() => handleCategoryChange(category)}
+                                                className={cn(
+                                                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                                    selectedCategory === category
+                                                        ? "bg-[#a7c4ff]/20 text-blue-950 border border-[#a7c4ff]/50 shadow-sm"
+                                                        : "text-gray-600 hover:bg-[#ffd8b3]/30 hover:text-gray-900"
+                                                )}
+                                            >
+                                                {category}
+                                                {selectedCategory === category && (
+                                                    <div className="w-2 h-2 rounded-full bg-[#a7c4ff]" />
+                                                )}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="p-8 mt-auto sticky bottom-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
-                                    <div className="">
-                                        <Button
-                                            className="w-full h-12 rounded-xl text-base bg-gray-900 hover:bg-black text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                                            onClick={() => setIsFilterOpen(false)}
-                                        >
-                                            View {filteredResources.length} Results
+                                <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+                                    <SheetClose asChild>
+                                        <Button className="w-full h-12 rounded-xl bg-[#a7c4ff] text-blue-950 font-bold hover:bg-[#96b3ed] shadow-md hover:shadow-lg transition-all border border-blue-900/5">
+                                            View {filteredResources.length} Result{filteredResources.length !== 1 ? 's' : ''}
                                         </Button>
-                                    </div>
+                                    </SheetClose>
                                 </div>
                             </SheetContent>
                         </Sheet>
@@ -162,7 +175,7 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                     <span>Found <span className="font-semibold text-foreground">{filteredResources.length}</span> resource{filteredResources.length !== 1 ? 's' : ''}</span>
                                     {selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES && (
-                                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 border-0 flex items-center gap-1">
+                                        <Badge variant="secondary" className="bg-[#a7c4ff] text-blue-950 hover:bg-[#96b3ed] border-0 flex items-center gap-1 font-semibold">
                                             {selectedCategory}
                                             <X
                                                 className="h-3 w-3 cursor-pointer hover:text-primary/80"
