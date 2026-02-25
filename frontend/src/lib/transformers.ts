@@ -19,20 +19,13 @@ export function transformResource(resource: Resource): Resource {
         services = (resource.tags as string).split(',').map(s => s.trim()).filter(Boolean);
     }
 
-    // Construct full address
-    const fullAddress = [
-        resource.address,
-        resource.city,
-        resource.state,
-        resource.zip_code
-    ].filter(Boolean).join(', ');
 
     return {
         ...resource,
         // Ensure category_name fallback
         category_name: resource.category_name || 'Uncategorized',
         // Use full address for UI, but keep individual fields for logic if needed
-        address: fullAddress,
+        address: resource.address,
         // Normalize services
         services: services.length > 0 ? services : [],
         // Ui hours mapping

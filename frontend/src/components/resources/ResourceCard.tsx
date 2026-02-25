@@ -63,23 +63,36 @@ export default function ResourceCard({ resource, onCategoryClick }: ResourceCard
 
           {/* Quick Info Grid */}
           <div className="mt-auto pt-4 border-t border-[#a7c4ff]/20">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               {resource.phone && (
-                <div className="flex items-center text-gray-700 group/item">
+                <a
+                href={`tel:${resource.phone}`}
+                className="flex items-center text-gray-700 hover:underline group/item"
+              >
                   <div className="p-2 rounded-lg bg-white/80 text-blue-600 group-hover/item:bg-[#a7c4ff] group-hover/item:text-blue-950 transition-colors mr-3 shadow-sm">
                     <Phone className="w-4 h-4" />
                   </div>
-                  <span className="text-sm font-medium">{resource.phone}</span>
-                </div>
+                <span className="text-sm font-medium">{resource.phone}</span>
+                </a>
               )}
 
-              {resource.ui_hours && (
-                <div className="flex items-center text-gray-700 group/item">
+              {resource.website && (
+                <a
+                  href={resource.website.startsWith('http') ? resource.website : `https://${resource.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-700 group/item min-w-0"
+                >
                   <div className="p-2 rounded-lg bg-white/80 text-orange-600 group-hover/item:bg-[#ffd8b3] group-hover/item:text-orange-950 transition-colors mr-3 shadow-sm">
-                    <Clock className="w-4 h-4" />
+                    <Globe className="w-4 h-4" />
                   </div>
-                  <span className="text-sm font-medium truncate">{resource.ui_hours}</span>
-                </div>
+                  <div className = "min-w-0 overflow-hidden">
+                  <span className="text-sm font-medium hover:underline flex items-center gap-1">
+                    <span className="truncate">{resource.website}</span>
+                    <ExternalLink className="w-3 h-3" />
+                    </span>
+                  </div>
+                </a>
               )}
             </div>
           </div>
@@ -192,7 +205,7 @@ export default function ResourceCard({ resource, onCategoryClick }: ResourceCard
                     rel="noopener noreferrer"
                     className="text-soft-blue-dark font-medium hover:underline flex items-center gap-1"
                   >
-                    Visit Website <ExternalLink className="w-3 h-3" />
+                    {resource.website} <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
               </div>
