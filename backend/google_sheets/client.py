@@ -4,12 +4,15 @@ Utility functions for interacting with Google Sheets for resource management.
 """
 
 import os
+import json
+import tempfile
 from typing import List, Dict, Optional, Any
-from google.oauth2.service_account import Credentials
+from google.oauth2.service_account import Credentials as ServiceAccountCredentials
+from google.oauth2.credentials import Credentials as UserCredentials
+import google.auth
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import sys
-import os
 
 # Add parent directory to path to import config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,22 +20,42 @@ from config import Config
 
 def get_google_sheets_service():
     """
-    Returns a Google Sheets service instance using service account credentials.
+    Returns a Google Sheets service instance.
+    
+    Credential priority:
+        1. GOOGLE_CREDENTIALS_JSON env var (for Render/production deployments)
+        2. Service account key file (if GOOGLE_SERVICE_ACCOUNT_PATH is set)
+        3. Application Default Credentials (for local dev via gcloud)
     
     Returns:
         tuple: A tuple containing (service, spreadsheet_id) where:
             - service: A configured Google Sheets API service
             - spreadsheet_id: The ID of the Google Spreadsheet
     """
-    creds_path = Config.GOOGLE_SERVICE_ACCOUNT_PATH
     spreadsheet_id = Config.GOOGLE_SPREADSHEET_ID
     
-    if not creds_path:
-        raise ValueError("GOOGLE_SERVICE_ACCOUNT_PATH must be set in environment variables")
     if not spreadsheet_id:
         raise ValueError("GOOGLE_SPREADSHEET_ID must be set in environment variables")
     
-    creds = Credentials.from_service_account_file(creds_path, scopes=Config.SCOPES)
+    creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
+    creds_path = Config.GOOGLE_SERVICE_ACCOUNT_PATH
+    
+    if creds_json:
+        # Priority 1: JSON credentials from environment variable (Render/production)
+        creds_data = json.loads(creds_json)
+        if creds_data.get('type') == 'service_account':
+            creds = ServiceAccountCredentials.from_service_account_info(creds_data, scopes=Config.SCOPES)
+        elif creds_data.get('type') == 'authorized_user':
+            creds = UserCredentials.from_authorized_user_info(creds_data, scopes=Config.SCOPES)
+        else:
+            raise ValueError(f"Unsupported credential type: {creds_data.get('type')}")
+    elif creds_path and os.path.exists(creds_path):
+        # Priority 2: Service account key file
+        creds = ServiceAccountCredentials.from_service_account_file(creds_path, scopes=Config.SCOPES)
+    else:
+        # Priority 3: Application Default Credentials (local dev)
+        creds, _ = google.auth.default(scopes=Config.SCOPES)
+    
     service = build('sheets', 'v4', credentials=creds)
     
     return service, spreadsheet_id
