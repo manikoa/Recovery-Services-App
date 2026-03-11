@@ -1,56 +1,21 @@
-/**
- * Header Component
- * 
- * This component represents the main navigation header of the application.
- * It should include the logo, navigation menu, and authentication controls.
- * 
- * Expected features:
- * 1. Site logo/name linking to home page
- * 2. Navigation menu with links to main sections
- * 3. Authentication controls (login/register or user profile)
- * 4. Mobile-responsive design
- * 
- * Implementation notes:
- * - Use NavigationMenu component for the main navigation
- * - Use Sheet component for mobile navigation and auth forms
- * - Implement conditional rendering based on authentication state
- * - Use the useAuth hook to access authentication state
- */
+'use client';
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { NavigationMenu, NavigationMenuList } from "@/components/ui/navigation-menu";
 
-// Uncomment when implementing authentication
-// import { useAuth } from "@/hooks/useAuth";
-// import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-// import AuthForm from "@/components/auth/AuthForm";
-// import UserProfile from "@/components/auth/UserProfile";
-
-export function Header() {
-  // Uncomment when implementing authentication
-  // const { user, loading } = useAuth();
-  
+export default function Header() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2">
-          <span className="text-xl font-bold">Recovery Services</span>
-        </Link>
-        
-        {/* Add your navigation menu implementation here */}
-        <NavigationMenu>
-          <NavigationMenuList>
-            {/* Add navigation menu items here */}
-          </NavigationMenuList>
-        </NavigationMenu>
-        
-        {/* Add authentication controls here */}
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            Provider Login
-          </Button>
-          <Button size="sm">Get Help</Button>
+    <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between animate-in fade-in slide-in-from-top duration-700">
+          {/* Title Section */}
+          <div className="flex-1">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900 transition-all duration-300 hover:text-primary">
+              Walla Walla Recovery Resources
+            </h1>
+            <p className="text-gray-500 text-xs md:text-sm hidden sm:block mt-0.5 animate-in fade-in duration-1000 delay-150 font-medium">
+              Find support and services for your recovery journey
+            </p>
+          </div>
+
         </div>
       </div>
     </header>

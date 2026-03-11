@@ -17,7 +17,8 @@ frontend/
 │   │   └── ui/         # UI components (shadcn/ui)
 │   ├── hooks/          # Custom React hooks
 │   ├── lib/
-│   │   ├── supabase/   # Supabase client and utilities
+│   │   ├── api/        # API client functions
+│   │   ├── google-sheets/  # Google Sheets server-side utilities
 │   │   └── utils.ts    # Utility functions
 │   └── types/          # TypeScript type definitions
 └── ...
@@ -31,11 +32,12 @@ frontend/
 npm install
 ```
 
-2. Create a `.env.local` file with your Supabase credentials:
+2. Create a `.env.local` file with your Google Sheets credentials:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project-id.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_SPREADSHEET_ID=your-spreadsheet-id-here
 ```
 
 3. Run the development server:
@@ -48,14 +50,14 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Features
 
-- **Authentication**: User login and registration with Supabase Auth
 - **Resource Discovery**: Search and filter recovery resources
 - **Resource Management**: View detailed resource information
 - **Provider Portal**: Update resource information (for authenticated providers)
+- **Google Sheets Integration**: Resources stored and managed via Google Spreadsheets
 
 ## Technologies
 
 - [Next.js](https://nextjs.org/) - React framework
 - [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
 - [shadcn/ui](https://ui.shadcn.com/) - UI component library
-- [Supabase](https://supabase.com/) - Backend-as-a-Service
+- [Google Sheets API](https://developers.google.com/sheets/api) - Backend data storage

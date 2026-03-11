@@ -17,36 +17,71 @@
  * - Include copyright information and acknowledgments
  */
 
-import Link from "next/link";
+import { Phone, Instagram, Linkedin, Facebook, Twitter } from 'lucide-react';
 
-export function Footer() {
+export default function Footer() {
   return (
-    <footer className="border-t bg-background">
-      <div className="container py-8 md:py-12">
-        {/* Add your footer implementation here */}
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-          {/* Site information */}
-          <div>
-            <h3 className="text-lg font-semibold">Recovery Services</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Connecting individuals in need with essential recovery resources.
-            </p>
+    <footer className="sticky bottom-0 z-50 w-full bg-white/70 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          {/* Crisis Support */}
+          <div className="flex items-center gap-2">
+            <Phone className="w-5 h-5 text-primary" />
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 font-medium">Crisis Support:</span>
+              <a
+                href="tel:988"
+                className="text-base font-bold text-primary hover:text-blue-700 transition-colors"
+              >
+                988
+              </a>
+            </div>
           </div>
-          
-          {/* Links section */}
-          <div>
-            {/* Add footer links here */}
+
+          {/* Social Media Icons */}
+          <div className="flex items-center gap-5">
+            <a
+              href="https://instagram.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary transition-colors"
+              aria-label="Instagram"
+            >
+              <Instagram className="w-5 h-5" />
+            </a>
+            <a
+              href="https://linkedin.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary transition-colors"
+              aria-label="LinkedIn"
+            >
+              <Linkedin className="w-5 h-5" />
+            </a>
+            <a
+              href="https://facebook.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary transition-colors"
+              aria-label="Facebook"
+            >
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a
+              href="https://twitter.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-primary transition-colors"
+              aria-label="Twitter"
+            >
+              <Twitter className="w-5 h-5" />
+            </a>
           </div>
-          
-          {/* Provider section */}
-          <div>
-            {/* Add provider links here */}
-          </div>
-        </div>
-        
-        {/* Copyright section */}
-        <div className="mt-8 border-t pt-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Community Change Team. All rights reserved.</p>
+
+          {/* Copyright */}
+          <p className="text-sm text-gray-400">
+            &copy; {new Date().getFullYear()} <a href="https://www.wwcommunitychangeteam.com/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Community Change Team</a>
+          </p>
         </div>
       </div>
     </footer>
