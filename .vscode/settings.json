@@ -1,0 +1,6 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/backend/recovery/bin/python",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/backend"
+  ]
+}
