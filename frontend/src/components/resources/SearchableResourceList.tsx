@@ -3,20 +3,29 @@
 import { useState, useMemo } from 'react';
 import ResourceList from './ResourceList';
 import { Input } from '@/components/ui/input';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-    SheetClose,
-} from '@/components/ui/sheet';
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Resource } from '@/types/resource';
-import { UI_CONSTANTS } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+
+interface Resource {
+    id: number;
+    name: string;
+    category: string;
+    description: string;
+    phone: string;
+    address: string;
+    website: string;
+    hours: string;
+    services: string[];
+    keyword?: string;
+}
 
 interface SearchableResourceListProps {
     initialResources: Resource[];
@@ -24,13 +33,12 @@ interface SearchableResourceListProps {
 
 export default function SearchableResourceList({ initialResources }: SearchableResourceListProps) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState<string>(UI_CONSTANTS.ALL_CATEGORIES);
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
 
     // Extract unique categories
     const categories = useMemo(() => {
-        const uniqueCategories = new Set(initialResources.map(r => r.category_name));
-        return Array.from(uniqueCategories).filter(Boolean).sort() as string[];
+        const uniqueCategories = new Set(initialResources.map(r => r.category));
+        return ['All Categories', ...Array.from(uniqueCategories).sort()];
     }, [initialResources]);
 
     // Filter resources based on search query and category
@@ -38,172 +46,121 @@ export default function SearchableResourceList({ initialResources }: SearchableR
         let filtered = initialResources;
 
         // Filter by category
-        if (selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES) {
-            filtered = filtered.filter(resource => resource.category_name === selectedCategory);
+        if (selectedCategory !== 'All Categories') {
+            filtered = filtered.filter(resource => resource.category === selectedCategory);
         }
 
         // Filter by search query
         if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
+            // Split by comma to support multi-keyword search
+            const queries = searchQuery.toLowerCase().split(',').map(q => q.trim()).filter(q => q.length > 0);
+
             filtered = filtered.filter((resource) => {
                 const searchableText = [
                     resource.name,
-                    resource.category_name,
+                    resource.category,
                     resource.description,
-                    resource.services?.join(' '),
+                    resource.services.join(' '),
                     resource.address,
-                    resource.phone
+                    resource.phone,
+                    resource.keyword || ''
                 ].join(' ').toLowerCase();
 
-                return searchableText.includes(query);
+                // Match if ANY of the comma-separated keywords is found
+                return queries.some(query => searchableText.includes(query));
             });
         }
 
         return filtered;
     }, [initialResources, searchQuery, selectedCategory]);
 
-    const handleCategoryChange = (category: string) => {
-        setSelectedCategory(category);
-    };
-
-    const activeFilterCount = selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES ? 1 : 0;
-
     return (
         <div className="space-y-8">
             {/* Minimal Search & Filter */}
             <div className="sticky top-24 z-40 max-w-2xl mx-auto animate-in fade-in slide-in-from-top duration-700 pointer-events-none">
                 <div className="pointer-events-auto relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-accent/20 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none" />
-                    <div className="relative bg-background/80 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl border border-border/50 p-2 md:p-1 flex flex-col md:flex-row items-center gap-2 md:gap-0">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 pointer-events-none" />
+                    <div className="relative bg-white/80 backdrop-blur-xl shadow-lg hover:shadow-xl transition-all duration-300 rounded-2xl border border-white/50 p-2 md:p-1 flex flex-col md:flex-row items-center gap-2 md:gap-0">
                         <div className="flex items-center w-full md:w-auto md:flex-1">
-                            <Search className="ml-2 md:ml-4 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors duration-300" />
+                            <Search className="ml-2 md:ml-4 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300" />
                             <Input
                                 type="text"
-                                placeholder="Find resources..."
+                                placeholder="Find resources"
                                 value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 placeholder:text-muted-foreground h-10 md:h-12 text-base px-3"
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setSearchQuery(value);
+
+                                    if (value.length > 2) {
+                                        // Track search in Google Analytics
+                                        if (typeof window !== 'undefined' && (window as any).gtag) {
+                                            (window as any).gtag('event', 'search', {
+                                                search_term: value
+                                            });
+                                        }
+
+                                        // Save to Google Sheet
+                                        fetch('http://localhost:8001/api/search/track', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ keyword: value })
+                                        }).catch(err => console.error('Failed to track search:', err));
+                                    }
+                                }}
+                                className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0 placeholder:text-gray-400 h-10 md:h-12 text-base px-3"
                             />
                         </div>
-                        <div className="h-[1px] w-full md:h-8 md:w-[1px] bg-border md:mx-2" />
-
-                        <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-                            <SheetTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    className="w-full md:w-auto h-10 rounded-xl gap-2 text-muted-foreground hover:text-primary hover:bg-accent transition-colors font-medium justify-between md:justify-start px-3 md:px-4"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <SlidersHorizontal className="h-4 w-4" />
-                                        <span>Filters</span>
-                                    </div>
-                                    {activeFilterCount > 0 && (
-                                        <Badge variant="secondary" className="bg-soft-blue/20 text-blue-900 h-5 px-1.5 min-w-[1.25rem] flex items-center justify-center">
-                                            {activeFilterCount}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent className="w-full sm:w-[400px] overflow-y-auto p-0 flex flex-col gap-0 border-l border-border/10 bg-white">
-                                <SheetHeader className="px-8 py-8 space-y-2 text-left bg-white sticky top-0 z-10">
-                                    <div className="flex items-center justify-between">
-                                        <SheetTitle className="text-3xl font-light tracking-tight text-gray-900">Filters</SheetTitle>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => setIsFilterOpen(false)}
-                                            className="-mr-4 h-10 w-10 text-gray-400 hover:text-gray-900 rounded-full"
-                                        >
-                                            <X className="h-6 w-6" />
-                                            <span className="sr-only">Close</span>
-                                        </Button>
-                                    </div>
-                                    <p className="text-base text-gray-500 font-light">Narrow down resources by category</p>
-                                </SheetHeader>
-
-                                <div className="flex-1 overflow-y-auto px-8 pb-8">
-                                    <div className="space-y-1">
-                                        <button
-                                            onClick={() => handleCategoryChange(UI_CONSTANTS.ALL_CATEGORIES)}
-                                            className={cn(
-                                                "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                                                selectedCategory === UI_CONSTANTS.ALL_CATEGORIES
-                                                    ? "bg-[#a7c4ff]/20 text-blue-950 border border-[#a7c4ff]/50 shadow-sm"
-                                                    : "text-gray-600 hover:bg-[#ffd8b3]/30 hover:text-gray-900"
-                                            )}
-                                        >
-                                            {UI_CONSTANTS.ALL_CATEGORIES}
-                                            {selectedCategory === UI_CONSTANTS.ALL_CATEGORIES && (
-                                                <div className="w-2 h-2 rounded-full bg-[#a7c4ff]" />
-                                            )}
-                                        </button>
-                                        {categories.map((category) => (
-                                            <button
-                                                key={category}
-                                                onClick={() => handleCategoryChange(category)}
-                                                className={cn(
-                                                    "w-full flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                                                    selectedCategory === category
-                                                        ? "bg-[#a7c4ff]/20 text-blue-950 border border-[#a7c4ff]/50 shadow-sm"
-                                                        : "text-gray-600 hover:bg-[#ffd8b3]/30 hover:text-gray-900"
-                                                )}
-                                            >
-                                                {category}
-                                                {selectedCategory === category && (
-                                                    <div className="w-2 h-2 rounded-full bg-[#a7c4ff]" />
-                                                )}
-                                            </button>
-                                        ))}
-                                    </div>
+                        <div className="h-[1px] w-full md:h-8 md:w-[1px] bg-gray-200 md:mx-2" />
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="w-full md:w-[180px] border-0 shadow-none bg-transparent hover:bg-gray-50 focus:ring-0 h-10 rounded-xl gap-2 text-gray-600 hover:text-blue-600 transition-colors font-medium justify-between md:justify-start px-3 md:px-3">
+                                <div className="flex items-center gap-2">
+                                    <Filter className="h-4 w-4" />
+                                    <SelectValue placeholder="Category" />
                                 </div>
-
-                                <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-                                    <SheetClose asChild>
-                                        <Button className="w-full h-12 rounded-xl bg-[#a7c4ff] text-blue-950 font-bold hover:bg-[#96b3ed] shadow-md hover:shadow-lg transition-all border border-blue-900/5">
-                                            View {filteredResources.length} Result{filteredResources.length !== 1 ? 's' : ''}
-                                        </Button>
-                                    </SheetClose>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                            </SelectTrigger>
+                            <SelectContent align="end" className="w-[200px] border-none shadow-xl bg-white/90 backdrop-blur-xl rounded-xl overflow-hidden p-1">
+                                {categories.map((category) => (
+                                    <SelectItem
+                                        key={category}
+                                        value={category}
+                                        className="rounded-lg cursor-pointer focus:bg-blue-50 focus:text-blue-600"
+                                    >
+                                        {category}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Results Count & Active Filters */}
                     <div className="mt-4 flex flex-col items-center gap-2 animate-in fade-in duration-300 min-h-[2rem] pointer-events-auto relative z-10">
-                        {(searchQuery || selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES) && (
+                        {(searchQuery || selectedCategory !== 'All Categories') && (
                             <div className="flex flex-col items-center gap-2">
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    <span>Found <span className="font-semibold text-foreground">{filteredResources.length}</span> resource{filteredResources.length !== 1 ? 's' : ''}</span>
-                                    {selectedCategory !== UI_CONSTANTS.ALL_CATEGORIES && (
-                                        <Badge variant="secondary" className="bg-[#a7c4ff] text-blue-950 hover:bg-[#96b3ed] border-0 flex items-center gap-1 font-semibold">
+                                <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap justify-center">
+                                    <span>Found <span className="font-semibold text-gray-900">{filteredResources.length}</span> resource{filteredResources.length !== 1 ? 's' : ''}</span>
+                                    {selectedCategory !== 'All Categories' && (
+                                        <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0">
                                             {selectedCategory}
-                                            <X
-                                                className="h-3 w-3 cursor-pointer hover:text-primary/80"
-                                                onClick={() => setSelectedCategory(UI_CONSTANTS.ALL_CATEGORIES)}
-                                            />
                                         </Badge>
                                     )}
-                                    {searchQuery && (
-                                        <Badge variant="secondary" className="bg-accent text-accent-foreground hover:bg-accent/80 border-0 flex items-center gap-1">
-                                            "{searchQuery}"
-                                            <X
-                                                className="h-3 w-3 cursor-pointer hover:text-accent-foreground/80"
-                                                onClick={() => setSearchQuery('')}
-                                            />
+                                    {/* Show a badge for each comma-separated keyword */}
+                                    {searchQuery && searchQuery.split(',').map(q => q.trim()).filter(q => q.length > 0).map((term, index) => (
+                                        <Badge key={index} variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-0">
+                                            "{term}"
                                         </Badge>
-                                    )}
+                                    ))}
                                 </div>
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                         setSearchQuery('');
-                                        setSelectedCategory(UI_CONSTANTS.ALL_CATEGORIES);
+                                        setSelectedCategory('All Categories');
                                     }}
-                                    className="text-muted-foreground hover:text-foreground hover:bg-accent h-8 text-xs font-medium gap-1.5"
+                                    className="text-gray-500 hover:text-gray-900 hover:bg-gray-100 h-8 text-xs font-medium gap-1.5"
                                 >
                                     <X className="h-3.5 w-3.5" />
-                                    Clear All
+                                    Clear Filters
                                 </Button>
                             </div>
                         )}

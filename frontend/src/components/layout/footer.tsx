@@ -26,12 +26,12 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Crisis Support */}
           <div className="flex items-center gap-2">
-            <Phone className="w-5 h-5 text-primary" />
+            <Phone className="w-5 h-5 text-blue-600" />
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-500 font-medium">Crisis Support:</span>
               <a
                 href="tel:988"
-                className="text-base font-bold text-primary hover:text-blue-700 transition-colors"
+                className="text-base font-bold text-blue-600 hover:text-blue-700 transition-colors"
               >
                 988
               </a>
@@ -44,7 +44,7 @@ export default function Footer() {
               href="https://instagram.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
               aria-label="Instagram"
             >
               <Instagram className="w-5 h-5" />
@@ -53,7 +53,7 @@ export default function Footer() {
               href="https://linkedin.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
               aria-label="LinkedIn"
             >
               <Linkedin className="w-5 h-5" />
@@ -62,7 +62,7 @@ export default function Footer() {
               href="https://facebook.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
               aria-label="Facebook"
             >
               <Facebook className="w-5 h-5" />
@@ -71,7 +71,7 @@ export default function Footer() {
               href="https://twitter.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-primary transition-colors"
+              className="text-gray-400 hover:text-blue-600 transition-colors"
               aria-label="Twitter"
             >
               <Twitter className="w-5 h-5" />
@@ -80,7 +80,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <p className="text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} <a href="https://www.wwcommunitychangeteam.com/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Community Change Team</a>
+            &copy; {new Date().getFullYear()} Community Change Team
           </p>
         </div>
       </div>

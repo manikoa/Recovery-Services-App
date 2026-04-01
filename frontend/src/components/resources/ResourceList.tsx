@@ -6,7 +6,18 @@
  */
 
 import ResourceCard from './ResourceCard';
-import { Resource } from '@/types/resource';
+
+interface Resource {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  phone: string;
+  address: string;
+  website: string;
+  hours: string;
+  services: string[];
+}
 
 interface ResourceListProps {
   resources: Resource[];
