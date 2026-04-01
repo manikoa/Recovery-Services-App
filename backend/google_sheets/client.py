@@ -4,58 +4,37 @@ Utility functions for interacting with Google Sheets for resource management.
 """
 
 import os
-import json
-import tempfile
 from typing import List, Dict, Optional, Any
-from google.oauth2.service_account import Credentials as ServiceAccountCredentials
-from google.oauth2.credentials import Credentials as UserCredentials
-import google.auth
+from datetime import datetime
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-import sys
+from dotenv import load_dotenv
 
-# Add parent directory to path to import config
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import Config
+# Load environment variables
+load_dotenv()
+
+# Google Sheets API scope
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 def get_google_sheets_service():
     """
-    Returns a Google Sheets service instance.
-    
-    Credential priority:
-        1. GOOGLE_CREDENTIALS_JSON env var (for Render/production deployments)
-        2. Service account key file (if GOOGLE_SERVICE_ACCOUNT_PATH is set)
-        3. Application Default Credentials (for local dev via gcloud)
+    Returns a Google Sheets service instance using service account credentials.
     
     Returns:
         tuple: A tuple containing (service, spreadsheet_id) where:
             - service: A configured Google Sheets API service
             - spreadsheet_id: The ID of the Google Spreadsheet
     """
-    spreadsheet_id = Config.GOOGLE_SPREADSHEET_ID
+    creds_path = os.getenv('GOOGLE_SERVICE_ACCOUNT_PATH')
+    spreadsheet_id = os.getenv('GOOGLE_SPREADSHEET_ID')
     
+    if not creds_path:
+        raise ValueError("GOOGLE_SERVICE_ACCOUNT_PATH must be set in environment variables")
     if not spreadsheet_id:
         raise ValueError("GOOGLE_SPREADSHEET_ID must be set in environment variables")
     
-    creds_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
-    creds_path = Config.GOOGLE_SERVICE_ACCOUNT_PATH
-    
-    if creds_json:
-        # Priority 1: JSON credentials from environment variable (Render/production)
-        creds_data = json.loads(creds_json)
-        if creds_data.get('type') == 'service_account':
-            creds = ServiceAccountCredentials.from_service_account_info(creds_data, scopes=Config.SCOPES)
-        elif creds_data.get('type') == 'authorized_user':
-            creds = UserCredentials.from_authorized_user_info(creds_data, scopes=Config.SCOPES)
-        else:
-            raise ValueError(f"Unsupported credential type: {creds_data.get('type')}")
-    elif creds_path and os.path.exists(creds_path):
-        # Priority 2: Service account key file
-        creds = ServiceAccountCredentials.from_service_account_file(creds_path, scopes=Config.SCOPES)
-    else:
-        # Priority 3: Application Default Credentials (local dev)
-        creds, _ = google.auth.default(scopes=Config.SCOPES)
-    
+    creds = Credentials.from_service_account_file(creds_path, scopes=SCOPES)
     service = build('sheets', 'v4', credentials=creds)
     
     return service, spreadsheet_id
@@ -70,96 +49,62 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                  - city: Filter by city (partial match)
                  - state: Filter by state (exact match, case-insensitive)
                  - status: Filter by status (exact match, case-insensitive)
-                 - query: Search query that searches across name, description, category,
-                          address, city, state, and tags (partial match, case-insensitive)
+                 - query: Search query — supports comma-separated keywords (OR logic).
+                          e.g. "food, shelter" returns results matching either "food" OR "shelter"
         
     Returns:
-        List of resources as dictionaries. Each dictionary includes a hidden '_row' key
-        indicating the source row number (1-based) in the spreadsheet.
+        List of resources as dictionaries
     """
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        # Read from the Resources sheet
-        range_name = Config.SHEETS['RESOURCES']
-        
+        # Read headers from row 1
+        header_range = 'Resources!A1:AA1'
+        header_result = service.spreadsheets().values().get(
+            spreadsheetId=spreadsheet_id,
+            range=header_range
+        ).execute()
+
+        headers = header_result.get('values', [[]])[0]
+
+        if not headers:
+            return []
+
+        # Read data from row 2 onwards
+        range_name = 'Resources!A2:AA'
+
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
             range=range_name
         ).execute()
-        
+
         values = result.get('values', [])
-        
+
         if not values:
             return []
         
-        # Get headers from Config
-        headers = Config.RESOURCE_HEADERS
-        
         resources = []
-        # Use enumerate to track the original row index from the API response
-        # The API request started at A2, so index 0 is row 2.
-        for idx, row in enumerate(values):
+        for row in values:
             if len(row) < len(headers):
                 # Pad row with empty strings if needed
                 row.extend([''] * (len(headers) - len(row)))
             
             resource = dict(zip(headers, row[:len(headers)]))
             
-            # Store the actual row number (1-based) for updates
-            resource['_row'] = idx + 2
-            
             # Convert string values to appropriate types
-            resource['id'] = int(resource.get('id', 0)) if str(resource.get('id', '')).isdigit() else 0
-            # category_id is not in sheet, default to 0
-            resource['category_id'] = 0 
+            resource['id'] = int(resource.get('id', 0)) if resource.get('id', '').isdigit() else 0
+            resource['category_id'] = int(resource.get('category_id', 0)) if resource.get('category_id', '').isdigit() else 0
+            resource['requires_verification'] = resource.get('requires_verification', '').lower() == 'true'
             
-            # Map keys to expected API format
-            resource['description'] = resource.get('sheet_description', '')
-            
-            # Derive a short category name from primary_services or organization_type
-            # expecting comma separated values
-            primary = resource.get('primary_services', '')
-            if primary:
-                resource['category_name'] = primary.split(',')[0].strip()
-            else:
-                resource['category_name'] = resource.get('organization_type', 'Uncategorized')
-            
-            # Simple address parsing (very basic)
-            full_address = resource.get('address', '')
-            resource['city'] = ''
-            resource['state'] = ''
-            resource['zip_code'] = ''
-            
-            if full_address:
-                parts = full_address.split(',')
-                if len(parts) >= 3:
-                     # Attempt to parse "Street, City, WA Zip"
-                     try:
-                         resource['city'] = parts[-2].strip()
-                         state_zip = parts[-1].strip().split(' ')
-                         if len(state_zip) >= 2:
-                             resource['state'] = state_zip[0]
-                             resource['zip_code'] = state_zip[1]
-                     except:
-                         pass
-
-            # Combine tags and keywords
-            tags_list = []
-            if resource.get('tags'):
-                tags_list.extend([t.strip() for t in resource['tags'].split(',')])
-            if resource.get('keywords'):
-                tags_list.extend([t.strip() for t in resource['keywords'].split(',')])
-            resource['tags'] = tags_list
-
             # Skip resources with invalid IDs
             if resource['id'] == 0:
                 continue
             
+            # Apply filters
+            # Check status filter (applies whether filters dict exists or not)
             if filters and 'status' in filters:
                 # If status filter is explicitly set, apply it strictly
-                # If status is None, it means "all statuses" (don't filter)
-                if filters['status'] is not None and resource.get('status', '').lower() != filters['status'].lower():
+                if resource.get('status', '').lower() != filters['status'].lower():
                     continue
             else:
                 # Default behavior: show active and pending resources (exclude inactive/archived)
@@ -176,9 +121,9 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                 if 'state' in filters and resource.get('state', '').upper() != filters['state'].upper():
                     continue
                 if 'query' in filters:
-                    # Search across multiple fields
-                    query = filters['query'].lower().strip()
-                    if query:
+                    # Split by comma to support multi-keyword search (OR logic)
+                    queries = [q.strip() for q in filters['query'].lower().split(',') if q.strip()]
+                    if queries:
                         searchable_fields = [
                             resource.get('name', ''),
                             resource.get('description', ''),
@@ -187,9 +132,13 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                             resource.get('city', ''),
                             resource.get('state', ''),
                             resource.get('tags', ''),
+                            resource.get('keyword', ''),
                         ]
-                        # Check if query matches any field
-                        matches = any(query in str(field).lower() for field in searchable_fields if field)
+                        # Match if ANY keyword matches ANY field (OR logic)
+                        matches = any(
+                            any(q in str(field).lower() for field in searchable_fields if field)
+                            for q in queries
+                        )
                         if not matches:
                             continue
             
@@ -229,7 +178,7 @@ def get_resource_categories() -> List[Dict[str, Any]]:
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        range_name = Config.SHEETS['CATEGORIES']
+        range_name = 'Categories!A2:D'  # Assuming Categories sheet exists
         
         result = service.spreadsheets().values().get(
             spreadsheetId=spreadsheet_id,
@@ -296,12 +245,11 @@ def create_resource(resource_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
             str(resource_data.get('requires_verification', True)),
             ','.join(resource_data.get('tags', [])),
             resource_data.get('created_at', ''),
-            resource_data.get('updated_at', '')
+            resource_data.get('updated_at', ''),
+            resource_data.get('keyword', '')  # Added keyword field
         ]
         
-        
-        
-        range_name = Config.SHEETS['RESOURCES']
+        range_name = 'Resources!A2:Z'
         
         body = {
             'values': [row]
@@ -336,50 +284,58 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
     try:
         service, spreadsheet_id = get_google_sheets_service()
         
-        # Get all resources to find the correct row index
-        # We need ALL resources to ensure we find the ID even if status is not active
-        resources = get_resources({'status': None})
+        # Get all resources to find the row
+        resources = get_resources({'status': None})  # Get all including inactive
+        row_index = None
         
-        target_resource = None
-        for r in resources:
-            if r.get('id') == resource_id:
-                target_resource = r
+        for idx, resource in enumerate(resources):
+            if resource.get('id') == resource_id:
+                row_index = idx + 2  # +2 because we skip header and 0-indexed
                 break
         
-        if not target_resource or '_row' not in target_resource:
+        if row_index is None:
             return False
-            
-        row_index = target_resource['_row']
         
         # Map updates to column indices (A=0, B=1, etc.)
-        row_index = target_resource['_row']
+        column_map = {
+            'name': 1,
+            'slug': 2,
+            'description': 3,
+            'category_id': 4,
+            'category_name': 5,
+            'address': 6,
+            'city': 7,
+            'state': 8,
+            'zip_code': 9,
+            'phone': 10,
+            'email': 11,
+            'website': 12,
+            'hours_of_operation': 13,
+            'eligibility_criteria': 14,
+            'status': 15,
+            'requires_verification': 16,
+            'tags': 17,
+            'updated_at': 19,
+            'keyword': 20  # Added keyword mapping
+        }
         
-        # Map updates to column indices (A=0, B=1, etc.)
-        column_map = Config.RESOURCE_COLUMN_MAP
-        
-        # Prepare batch update data
-        data = []
+        # Prepare update requests
+        update_requests = []
         for field, value in updates.items():
             if field in column_map:
                 col_letter = chr(65 + column_map[field])  # Convert to A, B, C, etc.
                 range_name = f'Resources!{col_letter}{row_index}'
-                data.append({
-                    'range': range_name,
+                
+                body = {
                     'values': [[str(value)]]
-                })
-        
-        if not data:
-            return True  # No valid fields to update
-            
-        body = {
-            'valueInputOption': 'RAW',
-            'data': data
-        }
-        
-        service.spreadsheets().values().batchUpdate(
-            spreadsheetId=spreadsheet_id,
-            body=body
-        ).execute()
+                }
+                
+                service.spreadsheets().values().update(
+                    spreadsheetId=spreadsheet_id,
+                    range=range_name,
+                    valueInputOption='RAW',
+                    body=body
+                ).execute()
         
         return True
         
@@ -387,3 +343,71 @@ def update_resource(resource_id: int, updates: Dict[str, Any]) -> bool:
         print(f"An error occurred: {error}")
         return False
 
+def save_search_keyword(keyword: str) -> bool:
+    """
+    Save a search keyword to the SearchLog sheet for tracking.
+    Creates the sheet if it doesn't exist.
+    
+    Args:
+        keyword: The search term to save
+        
+    Returns:
+        True if successful, False otherwise
+    """
+    try:
+        service, spreadsheet_id = get_google_sheets_service()
+        
+        # Try to create SearchLog sheet if it doesn't exist
+        try:
+            # Check if sheet exists by trying to read from it
+            service.spreadsheets().values().get(
+                spreadsheetId=spreadsheet_id,
+                range='SearchLog!A1'
+            ).execute()
+        except HttpError:
+            # Sheet doesn't exist, create it with headers
+            body = {
+                'requests': [{
+                    'addSheet': {
+                        'properties': {
+                            'title': 'SearchLog'
+                        }
+                    }
+                }]
+            }
+            service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body=body
+            ).execute()
+            
+            # Add headers
+            headers_body = {
+                'values': [['Timestamp', 'Keyword']]
+            }
+            service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range='SearchLog!A1:B1',
+                valueInputOption='RAW',
+                body=headers_body
+            ).execute()
+        
+        # Append the search keyword with timestamp
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        body = {
+            'values': [[timestamp, keyword]]
+        }
+        
+        service.spreadsheets().values().append(
+            spreadsheetId=spreadsheet_id,
+            range='SearchLog!A:B',
+            valueInputOption='RAW',
+            insertDataOption='INSERT_ROWS',
+            body=body
+        ).execute()
+        
+        print(f"Saved search keyword: {keyword}")
+        return True
+        
+    except Exception as error:
+        print(f"Error saving keyword: {error}")
+        return False

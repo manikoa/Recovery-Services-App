@@ -8,7 +8,7 @@ export default function Header() {
         <div className="flex items-center justify-between animate-in fade-in slide-in-from-top duration-700">
           {/* Title Section */}
           <div className="flex-1">
-            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900 transition-all duration-300 hover:text-primary">
+            <h1 className="text-xl md:text-2xl font-semibold tracking-tight text-gray-900 transition-all duration-300 hover:text-blue-600">
               Walla Walla Recovery Resources
             </h1>
             <p className="text-gray-500 text-xs md:text-sm hidden sm:block mt-0.5 animate-in fade-in duration-1000 delay-150 font-medium">
