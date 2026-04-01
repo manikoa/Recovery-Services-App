@@ -49,8 +49,8 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                  - city: Filter by city (partial match)
                  - state: Filter by state (exact match, case-insensitive)
                  - status: Filter by status (exact match, case-insensitive)
-                 - query: Search query that searches across name, description, category,
-                          address, city, state, and tags (partial match, case-insensitive)
+                 - query: Search query — supports comma-separated keywords (OR logic).
+                          e.g. "food, shelter" returns results matching either "food" OR "shelter"
         
     Returns:
         List of resources as dictionaries
@@ -121,9 +121,9 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                 if 'state' in filters and resource.get('state', '').upper() != filters['state'].upper():
                     continue
                 if 'query' in filters:
-                    # Search across multiple fields INCLUDING keyword column
-                    query = filters['query'].lower().strip()
-                    if query:
+                    # Split by comma to support multi-keyword search (OR logic)
+                    queries = [q.strip() for q in filters['query'].lower().split(',') if q.strip()]
+                    if queries:
                         searchable_fields = [
                             resource.get('name', ''),
                             resource.get('description', ''),
@@ -132,10 +132,13 @@ def get_resources(filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, An
                             resource.get('city', ''),
                             resource.get('state', ''),
                             resource.get('tags', ''),
-                            resource.get('keyword', ''),  # Added keyword to search
+                            resource.get('keyword', ''),
                         ]
-                        # Check if query matches any field
-                        matches = any(query in str(field).lower() for field in searchable_fields if field)
+                        # Match if ANY keyword matches ANY field (OR logic)
+                        matches = any(
+                            any(q in str(field).lower() for field in searchable_fields if field)
+                            for q in queries
+                        )
                         if not matches:
                             continue
             

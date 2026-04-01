@@ -52,7 +52,9 @@ export default function SearchableResourceList({ initialResources }: SearchableR
 
         // Filter by search query
         if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
+            // Split by comma to support multi-keyword search
+            const queries = searchQuery.toLowerCase().split(',').map(q => q.trim()).filter(q => q.length > 0);
+
             filtered = filtered.filter((resource) => {
                 const searchableText = [
                     resource.name,
@@ -64,9 +66,8 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                     resource.keyword || ''
                 ].join(' ').toLowerCase();
 
-                
-
-                return searchableText.includes(query);
+                // Match if ANY of the comma-separated keywords is found
+                return queries.some(query => searchableText.includes(query));
             });
         }
 
@@ -84,7 +85,7 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                             <Search className="ml-2 md:ml-4 h-5 w-5 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-300" />
                             <Input
                                 type="text"
-                                placeholder="Find resources..."
+                                placeholder="Find resources"
                                 value={searchQuery}
                                 onChange={(e) => {
                                     const value = e.target.value;
@@ -135,18 +136,19 @@ export default function SearchableResourceList({ initialResources }: SearchableR
                     <div className="mt-4 flex flex-col items-center gap-2 animate-in fade-in duration-300 min-h-[2rem] pointer-events-auto relative z-10">
                         {(searchQuery || selectedCategory !== 'All Categories') && (
                             <div className="flex flex-col items-center gap-2">
-                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <div className="flex items-center gap-2 text-sm text-gray-500 flex-wrap justify-center">
                                     <span>Found <span className="font-semibold text-gray-900">{filteredResources.length}</span> resource{filteredResources.length !== 1 ? 's' : ''}</span>
                                     {selectedCategory !== 'All Categories' && (
                                         <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-0">
                                             {selectedCategory}
                                         </Badge>
                                     )}
-                                    {searchQuery && (
-                                        <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-0">
-                                            "{searchQuery}"
+                                    {/* Show a badge for each comma-separated keyword */}
+                                    {searchQuery && searchQuery.split(',').map(q => q.trim()).filter(q => q.length > 0).map((term, index) => (
+                                        <Badge key={index} variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-0">
+                                            "{term}"
                                         </Badge>
-                                    )}
+                                    ))}
                                 </div>
                                 <Button
                                     variant="ghost"
